@@ -1,0 +1,29 @@
+Deep research: GitHub Copilot model selection guide for developers (June 2026)
+
+Use the deep-research skill to produce a technical, in-depth guide to every AI model currently available in GitHub Copilot (~21 models across OpenAI, Anthropic, Google, Microsoft, and GitHub — GA and preview). Start from the existing files in this repo (copilot-available-models.md for the current roster and pricing, copilot-model-comparison-guide.md for prior work — extend, don't duplicate).
+
+AUDIENCE: professional developers choosing a model per task. Assume fluency with IDEs, agents, and tokens. No marketing language — be opinionated and specific.
+
+RESEARCH EVERY MODEL ON THESE DIMENSIONS, WITH CITED SOURCES:
+
+1. Capability — context window, reasoning level, speed/latency class, agentic ability, multimodal support. Ground claims in official GitHub/vendor docs and public coding benchmarks (SWE-bench Verified, Aider, etc.) where available.
+
+2. Cost — per-token rates under the new usage-based billing (1 AI credit = $0.01, effective June 1, 2026), including cached-input and long-context tiers. Estimate realistic cost-per-task (e.g., "a typical agent-mode refactor ≈ X credits on this model vs. Y on that one").
+
+3. Real-world strengths and weaknesses — what developers actually report (engineering blogs, GitHub community discussions, credible forum threads). Clearly label anecdotal claims as such and never present them as benchmark facts.
+
+FOR EACH MODEL INCLUDE: 2–3 concrete "use it for" examples and 2–3 "don't use it for" examples, each with a one-line why (e.g., "Don't use GPT-5.4 nano for multi-file refactors — no Agent/Edit mode support and weak long-context recall; do use it for commit-message generation where output quality floor is low and volume is high").
+
+DIFFERENTIATE RECOMMENDATIONS BY COPILOT SURFACE, since the right model differs across: inline completions, IDE chat (Ask/Edit), agent mode, Copilot CLI, cloud agent, and Copilot code review. Note which models are unavailable or restricted on each surface.
+
+DELIVERABLES:
+
+1. copilot-model-selection-guide.md containing:
+   - A capability × task-type matrix (markdown table: models as rows; columns like quick Q&A, multi-file refactor, greenfield scaffolding, debugging, code review, docs/writing, long-context analysis — rated with a simple ★/✓ scale plus cost tier)
+   - Per-model profiles (strengths, weaknesses, do/don't examples, cost notes, preview/GA status)
+   - A one-page cheat sheet: "Given task X on surface Y → use model Z (fallback: W)" — terse enough to pin next to the editor
+   - A short "rules of thumb" section (e.g., when to escalate from a lightweight to a powerful model, when caching changes the math)
+
+2. A standalone HTML graphic (copilot-model-cheatsheet.html) styled consistently with the existing slides in this repo — a visual one-screen version of the cheat sheet suitable for presenting.
+
+QUALITY BAR: Date-stamp the document, cite every factual claim with a linked source, flag preview models that may change, and adversarially verify any claim that drives a recommendation (especially benchmark numbers and per-surface availability). If sources conflict, say so rather than averaging.

@@ -106,7 +106,7 @@
 
 <div class="page-header">
   <h1>Saving Tokens with GitHub Copilot — Presentation Structure</h1>
-  <p class="subtitle">~57 slides · ~90 minutes · Developer deep-dive workshop · Chat · Agent mode · Copilot CLI · Current as of June 2026</p>
+  <p class="subtitle">~67 slides · ~100 minutes · Developer deep-dive workshop · Chat · Agent mode · Copilot CLI · Current as of June 2026</p>
   <div class="source-note">
     <strong>Sources synthesized:</strong> Primary GitHub &amp; Microsoft Learn docs (3-vote fact-checked) + Microsoft Reactor talk
     <em>"GitHub Copilot — Token Optimization"</em> (Todd Toler, MS Sr. Cloud Solution Architect, May 2026).
@@ -117,9 +117,9 @@
 <!-- Timing bar -->
 <div class="timing-bar">
   <div class="t-item"><div class="t-num" style="color:#3fb950;">12 min</div><div class="t-label">Act 1 — Why Quality Beats Cost</div></div>
-  <div class="t-item"><div class="t-num" style="color:#58a6ff;">12 min</div><div class="t-label">Act 2 — Foundations</div></div>
-  <div class="t-item"><div class="t-num" style="color:#bc8cff;">15 min</div><div class="t-label">Act 3 — The Billing Model</div></div>
-  <div class="t-item"><div class="t-num" style="color:#f778ba;">30 min</div><div class="t-label">Act 4 — Context Engineering</div></div>
+  <div class="t-item"><div class="t-num" style="color:#58a6ff;">14 min</div><div class="t-label">Act 2 — Foundations</div></div>
+  <div class="t-item"><div class="t-num" style="color:#bc8cff;">18 min</div><div class="t-label">Act 3 — The Billing Model</div></div>
+  <div class="t-item"><div class="t-num" style="color:#f778ba;">34 min</div><div class="t-label">Act 4 — Context Engineering</div></div>
   <div class="t-item"><div class="t-num" style="color:#39c5cf;">15 min</div><div class="t-label">Act 5 — Verify &amp; Apply</div></div>
 </div>
 
@@ -144,7 +144,7 @@
 <!-- ACT 2 -->
 <div class="act act-2">
   <div class="act-header">
-    <span class="act-badge badge-2">ACT 2 · 12 min</span>
+    <span class="act-badge badge-2">ACT 2 · 14 min</span>
     <span class="act-title title-2">Foundations — How LLMs, Agents &amp; Context Windows Work</span>
   </div>
 
@@ -158,6 +158,7 @@
       <div class="slide-card"><h4>Agents, Harnesses &amp; Models</h4><p>Agent = app. Harnesses: VS Code Chat, CLI, Cloud Agent, Claude Code/Codex. LLM = GPT/Claude/Gemini</p></div>
       <div class="slide-card"><h4>Re-Sent Every Turn</h4><p>Each loop resends the full history: system prompt + tools + input + output (pricier). It compounds</p></div>
       <div class="slide-card"><h4>Token Scale</h4><p>1 token ≈ ¾ word. 50–200K small models, up to 1M large (≈ LOTR trilogy + The Hobbit)</p></div>
+      <div class="slide-card"><h4>1M Windows Aren't Free <span class="warn-badge">NEW JUN 3</span></h4><p>Opt-in 1M-token windows (Opus 4.7, GPT-5.5) — GitHub's own warning: bigger windows = more credits; default recommended</p></div>
     </div>
   </div>
 
@@ -167,6 +168,7 @@
     <div class="slide-grid">
       <div class="sub-slide ss-blue"><h4>Lost in the Middle</h4><p>Model favors the start (instructions) + end (current work); switching tasks mid-session snaps it back → new window per task</p></div>
       <div class="sub-slide ss-blue"><h4>Recency Bias</h4><p>Above ~50% capacity it forgets system/original prompt &amp; drifts — keep the window under ~60–70%</p></div>
+      <div class="sub-slide ss-blue"><h4>Silent Compaction <span class="warn-badge">NEW</span></h4><p>VS Code auto-summarizes earlier messages when the window fills — "transparently in the background." Mid-session amnesia, explained; <code>/compact</code> + a disable setting exist</p></div>
     </div>
   </div>
 </div>
@@ -174,7 +176,7 @@
 <!-- ACT 3 -->
 <div class="act act-3">
   <div class="act-header">
-    <span class="act-badge badge-3">ACT 3 · 15 min</span>
+    <span class="act-badge badge-3">ACT 3 · 18 min</span>
     <span class="act-title title-3">The Billing Model — What Actually Gets Counted</span>
   </div>
 
@@ -183,11 +185,13 @@
     <div class="subsection-label lab-purple">3A · How Billing Works</div>
     <div class="slide-grid">
       <div class="slide-card"><h4>The 2026 Shift <span class="warn-badge">NEW</span></h4><p>June 1, 2026: premium-request units → usage-based GitHub AI Credits (1 credit = $0.01)</p></div>
-      <div class="slide-card"><h4>Credits = Tokens × Rate</h4><p>Cost driven by input + output + cached tokens at each model's published API rate</p></div>
+      <div class="slide-card"><h4>Credits = Tokens × Rate</h4><p>Cost driven by input + output + cached tokens at each model's published API rate; above ~200–272K input a ~2× long-context tier kicks in</p></div>
+      <div class="slide-card"><h4>Cached Input = 90% Off <span class="warn-badge">NEW</span></h4><p>Cache reads bill at 10% of input on every model; Anthropic adds a 1.25× cache-write premium. Stable prefixes pay — don't edit early instructions mid-session</p></div>
       <div class="slide-card"><h4>Legacy Premium Requests</h4><p>Still active for legacy annual Pro/Pro+ — both systems are live at once</p></div>
-      <div class="slide-card"><h4>What Counts as a Request</h4><p>Your prompts count; the agent's autonomous tool calls do NOT</p></div>
-      <div class="slide-card"><h4>The Multiplier Table</h4><p>0× base · 0.33× Haiku/GPT-4o · 1× Gemini 2.5 Pro · 6× Sonnet 4.5 · 15× Opus 4.5</p></div>
-      <div class="slide-card"><h4>Plan Allowances <span class="warn-badge">VERIFY LIVE</span></h4><p>Pro / Pro+ / Business / Enterprise tiers — confirm exact numbers in current docs</p></div>
+      <div class="slide-card"><h4>What Counts as a Request <span class="warn-badge">LEGACY ONLY</span></h4><p>Under legacy PRUs: your prompts count, the agent's tool calls do NOT. Under credits: every token meters — the biggest behavioral change</p></div>
+      <div class="slide-card"><h4>The Multiplier Table <span class="warn-badge">LEGACY</span></h4><p>0.33× Haiku 4.5/GPT-4o · 1× Gemini 2.5 Pro · 6×/9× Sonnet 4.5/4.6 · 15×/27× Opus 4.5/4.7+ · 57× GPT-5.5 (raised Jun 1; verified Jun 9)</p></div>
+      <div class="slide-card"><h4>Plan Allowances <span class="warn-badge">VERIFIED JUN 9</span></h4><p>Pro 1,500 · Pro+ 7,000 · Max 20,000 (new) · Business 1,900 / Enterprise 3,900 per user, pooled (promo 3,000/7,000 until Sept 1)</p></div>
+      <div class="slide-card"><h4>Code Review Bills Twice <span class="warn-badge">NEW JUN 1</span></h4><p>Private-repo reviews consume AI Credits + Actions minutes (overage at standard rates); public repos exempt — a second meter nobody watches</p></div>
     </div>
   </div>
 
@@ -195,10 +199,11 @@
   <div class="subsection sub-purple-hl">
     <div class="subsection-label lab-purple">3B · The Two Biggest Levers <span class="star-badge">HIGH LEVERAGE</span></div>
     <div class="slide-grid">
-      <div class="sub-slide ss-purple"><h4>Right-Size the Model</h4><p>~24× gap (Opus 4.7 vs GPT-5 mini). Reasoning models for planning; small models for implementation</p></div>
+      <div class="sub-slide ss-purple"><h4>Right-Size the Model</h4><p>50× input / 40× output spread (GPT-5.4 nano vs Fable 5; Opus-vs-mini ~16× blended). Reasoning models plan; small models implement</p></div>
+      <div class="sub-slide ss-purple"><h4>The Thinking-Effort Dial <span class="warn-badge">NEW JUN 2026</span></h4><p>Model picker sets low/med/high reasoning per request (VS Code + JetBrains) — thinking tokens bill as output; right-size the reasoning too</p></div>
       <div class="sub-slide ss-purple"><h4>Reasoning ≠ Always Better</h4><p>On a tight spec a reasoning model second-guesses &amp; "goes rogue" — use a lighter model to execute</p></div>
       <div class="sub-slide ss-purple"><h4>Auto Model Selection</h4><p>Now task-aware (not just availability) + a 10% token discount — well received</p></div>
-      <div class="sub-slide ss-purple"><h4>Base-Model Fallback</h4><p>0× included model after allowance is spent — keep working free for low-stakes tasks</p></div>
+      <div class="sub-slide ss-purple"><h4>Base-Model Fallback <span class="warn-badge">CORRECTED</span></h4><p>Gone under credits — exhaustion = stop, paid budget, or upgrade ("no automatic fallback to lower-cost models"); survives only on legacy annual</p></div>
     </div>
   </div>
 </div>
@@ -206,7 +211,7 @@
 <!-- ACT 4 -->
 <div class="act act-4">
   <div class="act-header">
-    <span class="act-badge badge-4">ACT 4 · 30 min</span>
+    <span class="act-badge badge-4">ACT 4 · 34 min</span>
     <span class="act-title title-4">Context Engineering — The Practical Controls (The Heart)</span>
   </div>
 
@@ -228,6 +233,7 @@
       <div class="sub-slide ss-pink"><h4>Research → Plan → Implement</h4><p>A new context window per phase; don't carry research junk into implementation and pay for it every turn</p></div>
       <div class="sub-slide ss-pink"><h4>Plan Mode + Reasoning</h4><p>Use reasoning models in plan mode to produce a precise spec / to-do list — no room for variance</p></div>
       <div class="sub-slide ss-pink"><h4>Parallel Agents by Layer</h4><p>Split a clear spec by architecture layer, define contracts; each agent carries only its relevant context</p></div>
+      <div class="sub-slide ss-pink"><h4>Spec Kit <span class="warn-badge">OFFICIAL OSS</span></h4><p>github/spec-kit formalizes the workflow: <code>/speckit.specify → plan → tasks → implement</code>; Copilot is the default integration. Quality lever, NOT a token saver (~20–40% more tokens, fewer wasted cycles)</p></div>
     </div>
   </div>
 
@@ -245,12 +251,14 @@
   <div class="subsection sub-pink">
     <div class="subsection-label lab-pink">4D · Agent Config Taxonomy</div>
     <div class="slide-grid">
-      <div class="slide-card"><h4>Persistent Instructions</h4><p>copilot-instructions.md / AGENTS.md are always-on — keep tiny: non-negotiables + miss-prevention</p></div>
+      <div class="slide-card"><h4>Persistent Instructions</h4><p>copilot-instructions.md / AGENTS.md are sent (and billed) on EVERY chat turn — keep tiny; path-scoped <code>.instructions.md</code> with <code>applyTo</code> globs load lazily</p></div>
       <div class="slide-card"><h4>Write &amp; Recreate Them</h4><p>Don't AI-generate (speaky/imprecise); write from observed behavior; CLI team trashes theirs every ~3 months</p></div>
       <div class="slide-card"><h4>Output Trimming</h4><p>"Be concise, only return code" — output tokens are the most expensive (the "politeness costs millions" point)</p></div>
       <div class="slide-card"><h4>Custom Agents</h4><p>Manually-invoked roles (e.g. TDD-red); restrict tools to prevent wrong paths (read-only on a GitHub issue)</p></div>
       <div class="slide-card"><h4>Skills</h4><p>Like custom agents but loaded dynamically only on a matching task ("lazy context"); avoid redundant skills</p></div>
       <div class="slide-card"><h4>MCPs, Sub-agents &amp; Memory</h4><p>MCPs bloat tool descriptions (scope Playwright into custom agents); sub-agents = 2nd window returning summaries; memory auto-learns</p></div>
+      <div class="slide-card"><h4>Copilot Spaces</h4><p>Curate repos/files/PRs/notes once on github.com; questions bill as Chat requests by tokens — what's in the Space affects every question's cost</p></div>
+      <div class="slide-card"><h4>Delegate to the Cloud Agent</h4><p>Runs in its own Actions environment, opens a PR — ~zero local context consumed; still bills credits + Actions minutes remotely. REST API (preview) for Pro+</p></div>
     </div>
   </div>
 
@@ -260,9 +268,10 @@
     <div class="slide-grid">
       <div class="slide-card"><h4>Think in Code</h4><p>Write scripts to filter outputs before analysis — e.g. trim the GitHub REST API to relevant fields only</p></div>
       <div class="slide-card"><h4>CLIs &gt; MCPs</h4><p>CLI tools like <code>gh</code> are already known to models and leaner than their MCP equivalents</p></div>
-      <div class="slide-card"><h4>Shell Output Trimming</h4><p>Tools like RTK trim CLI output down to agent-relevant information only</p></div>
+      <div class="slide-card"><h4>Shell Output Trimming</h4><p>Tools like RTK trim CLI output to agent-relevant info; VS Code now auto-compresses verbose terminal output (tests, builds, Docker) baseline</p></div>
       <div class="slide-card"><h4><code>/chronicle</code></h4><p>Analyzes your Copilot CLI session logs and suggests prompt optimizations</p></div>
       <div class="slide-card"><h4>Collapse Tool Calls</h4><p>Batch multiple tool calls into one to cut turns; model-specific tuning (power users w/ 1000s of agents only)</p></div>
+      <div class="slide-card"><h4>Utility Models</h4><p><code>chat.utilityModel</code>(+Small): route titles, summaries &amp; commit messages to a cheap model — a capability, not a measured saving</p></div>
     </div>
   </div>
 </div>
@@ -279,7 +288,7 @@
     <div class="subsection-label lab-cyan">5A · Verification &amp; Monitoring Toolkit</div>
     <div class="slide-grid">
       <div class="sub-slide ss-cyan"><h4>Copilot CLI: <code>/context</code></h4><p>Visual breakdown — System/Tools, Messages, Free Space, Buffer; <code>/compact</code> to reclaim</p></div>
-      <div class="sub-slide ss-cyan"><h4>IDE Ring Indicator</h4><p>Visual Studio context-window ring — exact % used + contributor breakdown in real time</p></div>
+      <div class="sub-slide ss-cyan"><h4>IDE Context Gauges</h4><p>Visual Studio ring + VS Code fill bar — hover shows exact tokens vs the model's window (e.g. 15K/128K) with per-category breakdown</p></div>
       <div class="sub-slide ss-cyan"><h4>The Debug Log</h4><p>Inspect what was actually sent each turn and what was cached vs. not — manual but invaluable when learning</p></div>
       <div class="sub-slide ss-cyan"><h4>Org Dashboards &amp; REST API</h4><p>Premium-requests analytics (GA Sep 2025), usage/entitlements, billing API, CopilotPremiumUsageMonitor</p></div>
     </div>
@@ -310,16 +319,17 @@
 <!-- Summary -->
 <div class="summary-grid">
   <div class="s-item"><div class="s-num" style="color:#3fb950;">8</div><div class="s-label">Act 1 slides</div></div>
-  <div class="s-item"><div class="s-num" style="color:#58a6ff;">8</div><div class="s-label">Act 2 slides</div></div>
-  <div class="s-item"><div class="s-num" style="color:#bc8cff;">10</div><div class="s-label">Act 3 slides</div></div>
-  <div class="s-item"><div class="s-num" style="color:#f778ba;">21</div><div class="s-label">Act 4 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#58a6ff;">10</div><div class="s-label">Act 2 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#bc8cff;">13</div><div class="s-label">Act 3 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#f778ba;">25</div><div class="s-label">Act 4 slides</div></div>
   <div class="s-item"><div class="s-num" style="color:#39c5cf;">11</div><div class="s-label">Act 5 slides</div></div>
-  <div class="s-item"><div class="s-num" style="color:#e6edf3;">~58</div><div class="s-label">Total slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#e6edf3;">~67</div><div class="s-label">Total slides</div></div>
 </div>
 
 <div class="timing-note">
-  Act 1: 12 min &nbsp;·&nbsp; Act 2: 12 min &nbsp;·&nbsp; Act 3: 15 min &nbsp;·&nbsp; <em>5-min break</em> &nbsp;·&nbsp; Act 4: 30 min &nbsp;·&nbsp; Act 5: 15 min<br>
-  <strong>Recommended total session: ~90 minutes</strong> &nbsp;·&nbsp; Trim Act 4 subsections (4D/4E) for a tighter ~60-min version
+  Act 1: 12 min &nbsp;·&nbsp; Act 2: 14 min &nbsp;·&nbsp; Act 3: 18 min &nbsp;·&nbsp; <em>5-min break</em> &nbsp;·&nbsp; Act 4: 34 min &nbsp;·&nbsp; Act 5: 15 min<br>
+  <strong>Recommended total session: ~100 minutes</strong> &nbsp;·&nbsp; For a strict 90: trim 4D/4E (Spaces, cloud agent, utility models are the first cuts) &nbsp;·&nbsp; Trim 4D/4E further for ~60-min version<br>
+  <em>June 10, 2026 additions (9 new slides + 4 card updates) sourced from acts-enhancement-research/enhancement-research-report.md</em>
 </div>
 
 </body>
