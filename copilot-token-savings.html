@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saving Tokens with GitHub Copilot — Developer Deck</title>
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#010409; --surface:#161b22; --surface2:#1c2128;
+    --border:#30363d; --border2:#21262d;
+    --text:#e6edf3; --muted:#8b949e; --dim:#6e7681;
+    --green:#3fb950; --green2:#2ea043; --blue:#58a6ff; --purple:#bc8cff;
+    --pink:#f778ba; --cyan:#39c5cf; --orange:#e3b341; --red:#f85149;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code','Consolas',monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg2);color:var(--text);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased;}
+
+  #deck{position:relative;width:100vw;height:100vh}
+  .slide{
+    --acc:var(--green);
+    position:absolute;inset:0;display:none;flex-direction:column;
+    padding:5.5vh 6vw 7vh;background:
+      radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb,var(--acc) 9%,transparent), transparent 60%),
+      radial-gradient(900px 500px at -5% 110%, rgba(63,185,80,.06), transparent 55%),
+      var(--bg);
+    animation:fade .35s ease;overflow:auto;
+  }
+  .slide.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  /* per-act accent */
+  .a1{--acc:var(--green)} .a2{--acc:var(--blue)} .a3{--acc:var(--purple)}
+  .a4{--acc:var(--pink)} .a5{--acc:var(--cyan)}
+
+  h1{font-size:clamp(2rem,4.4vw,3.6rem);line-height:1.05;letter-spacing:-.02em;font-weight:800}
+  h2{font-size:clamp(1.4rem,2.9vw,2.4rem);line-height:1.12;letter-spacing:-.015em;font-weight:750;margin-bottom:.2em}
+  h3{font-size:clamp(1.02rem,1.5vw,1.3rem);font-weight:700;color:var(--text)}
+  p,li{font-size:clamp(.92rem,1.3vw,1.15rem);line-height:1.5;color:var(--text)}
+  .muted{color:var(--muted)} .dim{color:var(--dim)}
+  code,.mono{font-family:var(--mono)}
+  .accent{color:var(--acc)}
+  .accent-g{color:var(--green)} .accent-b{color:var(--blue)} .accent-p{color:var(--purple)}
+  .accent-pk{color:var(--pink)} .accent-c{color:var(--cyan)} .accent-o{color:var(--orange)} .accent-r{color:var(--red)}
+
+  .kicker{
+    font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--acc);margin-bottom:1.4vh;display:flex;align-items:center;gap:.6em;
+  }
+  .kicker::before{content:"";width:26px;height:2px;background:var(--acc);display:inline-block}
+  .lede{font-size:clamp(1rem,1.5vw,1.3rem);color:var(--muted);max-width:64ch;margin-top:1.2vh}
+  .body{margin-top:2.6vh;display:flex;flex-direction:column;gap:1.8vh;flex:1}
+
+  ul.clean{list-style:none;display:flex;flex-direction:column;gap:1.3vh}
+  ul.clean>li{position:relative;padding-left:1.7em}
+  ul.clean>li::before{content:"▹";position:absolute;left:0;color:var(--acc);font-weight:700}
+  ul.sub{list-style:none;margin-top:.6vh;display:flex;flex-direction:column;gap:.6vh}
+  ul.sub>li{position:relative;padding-left:1.5em;font-size:.95em;color:var(--muted)}
+  ul.sub>li::before{content:"—";position:absolute;left:0;color:var(--dim)}
+
+  .grid{display:grid;gap:1.4vw}
+  .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+  .card{
+    background:linear-gradient(180deg,var(--surface),var(--surface2));
+    border:1px solid var(--border);border-radius:14px;padding:1.3em 1.3em;
+    display:flex;flex-direction:column;gap:.5em;
+  }
+  .card h3{display:flex;align-items:center;gap:.5em}
+  .card .ico{font-size:1.25em}
+  .card p,.card li{font-size:clamp(.82rem,1.05vw,.98rem);color:var(--muted)}
+  .card.hl{border-color:var(--acc);box-shadow:0 0 0 1px color-mix(in srgb,var(--acc) 25%,transparent),0 10px 40px -20px color-mix(in srgb,var(--acc) 50%,transparent)}
+  .card.warn{border-color:#9e6a03;background:linear-gradient(180deg,#1c1607,#161b22)}
+
+  .tag{display:inline-flex;align-items:center;gap:.4em;font-family:var(--mono);font-size:.7rem;
+    padding:.22em .7em;border-radius:999px;border:1px solid var(--border);
+    color:var(--muted);background:var(--bg2);letter-spacing:.04em;width:max-content;}
+  .tag.acc{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+  .tag.r{color:var(--red);border-color:rgba(248,81,73,.4)}
+  .tag.o{color:var(--orange);border-color:rgba(227,179,65,.4)}
+
+  table{width:100%;border-collapse:collapse;font-size:clamp(.82rem,1.1vw,1.02rem);margin-top:.8vh}
+  th,td{text-align:left;padding:.62em .9em;border-bottom:1px solid var(--border)}
+  th{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  td.num{font-family:var(--mono);text-align:right}
+  tr:hover td{background:rgba(88,166,255,.05)}
+  .bar{height:10px;border-radius:6px;background:linear-gradient(90deg,var(--green),var(--red));display:inline-block;vertical-align:middle}
+
+  pre{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+    padding:1em 1.2em;overflow:auto;font-family:var(--mono);
+    font-size:clamp(.74rem,1vw,.96rem);line-height:1.55;color:#c9d1d9;}
+  pre .c{color:var(--dim)} pre .k{color:var(--pink)} pre .s{color:#a5d6ff}
+  pre .f{color:var(--purple)} pre .ok{color:var(--green)} pre .no{color:var(--red)}
+
+  .callout{border-left:3px solid var(--acc);background:color-mix(in srgb,var(--acc) 7%,transparent);
+    padding:.9em 1.3em;border-radius:0 10px 10px 0;font-size:.96rem;color:var(--text);}
+  .callout.o{border-color:var(--orange);background:rgba(227,179,65,.07)}
+  .callout.r{border-color:var(--red);background:rgba(248,81,73,.07)}
+  .callout strong{color:var(--text)}
+
+  .stat{display:flex;flex-direction:column;gap:.1em}
+  .stat .big{font-size:clamp(1.7rem,3.8vw,3rem);font-weight:800;line-height:1;font-family:var(--mono)}
+  .stat .lbl{font-size:.82rem;color:var(--muted)}
+
+  .slide.section{justify-content:center;background:
+     radial-gradient(1000px 700px at 50% 50%, color-mix(in srgb,var(--acc) 12%,transparent), transparent 60%),var(--bg)}
+  .slide.section .num{font-family:var(--mono);font-size:clamp(4rem,16vw,12rem);font-weight:800;
+     color:transparent;-webkit-text-stroke:2px var(--acc);line-height:.8;margin-bottom:2vh;opacity:.85}
+  .slide.section h1{max-width:20ch}
+  .slide.section .lede{margin-top:2.2vh}
+
+  .slide.title{justify-content:center;background:
+     radial-gradient(900px 600px at 80% 20%, rgba(63,185,80,.12), transparent 55%),
+     radial-gradient(700px 500px at 10% 90%, rgba(88,166,255,.10), transparent 55%),var(--bg)}
+  .logo{display:flex;align-items:center;gap:.6em;margin-bottom:3vh}
+  .logo svg{width:44px;height:44px;fill:var(--text)}
+  .logo span{font-family:var(--mono);font-size:.95rem;letter-spacing:.05em;color:var(--muted)}
+  .title h1{font-size:clamp(2.4rem,6vw,5rem);max-width:20ch}
+  .title .grad{background:linear-gradient(90deg,var(--green),var(--blue) 55%,var(--purple));
+     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .meta{margin-top:3.5vh;display:flex;gap:2.3em;flex-wrap:wrap;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+  .meta b{color:var(--text);font-weight:600}
+
+  #hud{position:fixed;bottom:0;left:0;right:0;height:6px;background:var(--border2);z-index:50}
+  #prog{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--blue),var(--purple),var(--pink),var(--cyan));transition:width .3s}
+  #counter{position:fixed;bottom:16px;right:22px;font-family:var(--mono);font-size:.78rem;
+     color:var(--muted);z-index:50;background:rgba(1,4,9,.7);padding:.3em .7em;border-radius:8px;border:1px solid var(--border)}
+  #foot{position:fixed;bottom:16px;left:22px;font-family:var(--mono);font-size:.7rem;color:var(--dim);z-index:50}
+  #hint{position:fixed;top:16px;right:22px;font-family:var(--mono);font-size:.7rem;color:var(--dim);z-index:50}
+
+  .notes{display:none}
+  body.notes-on .slide.active .notes{
+    display:block;position:fixed;left:0;right:0;bottom:6px;max-height:34vh;overflow:auto;
+    background:rgba(1,4,9,.96);border-top:2px solid var(--acc);padding:1.1em 6vw;z-index:40;
+    font-size:.9rem;line-height:1.5;color:var(--muted);}
+  .notes b{color:var(--acc)}
+  .notes-badge{position:fixed;top:16px;left:22px;font-family:var(--mono);font-size:.7rem;color:var(--green);z-index:50;display:none}
+  body.notes-on .notes-badge{display:block}
+
+  .verified{font-family:var(--mono);font-size:.66rem;color:var(--green);border:1px solid rgba(63,185,80,.3);padding:.12em .5em;border-radius:6px}
+  .src{font-family:var(--mono);font-size:.7rem;color:var(--dim);margin-top:auto;padding-top:.8em}
+
+  @media (max-width:820px){ .g2,.g3,.g4{grid-template-columns:1fr} .slide{padding:5vh 6vw 9vh} }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- 1 TITLE -->
+  <section class="slide title active a1">
+    <div class="logo">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
+      <span>github copilot · developer enablement</span>
+    </div>
+    <h1>Saving Tokens with<br><span class="grad">GitHub Copilot</span></h1>
+    <p class="lede" style="margin-top:3vh">Optimize for <strong>agent quality</strong>, and lower token spend follows. A technical field guide for Chat, Agent mode &amp; Copilot CLI.</p>
+    <div class="meta">
+      <span><b>Audience</b> · Developers</span>
+      <span><b>Format</b> · 5 acts · ~90 min</span>
+      <span><b>Current as of</b> · June 2026</span>
+    </div>
+    <div class="notes"><b>Open:</b> The thesis up front — this is NOT "use Copilot less." It's "make every token count." Quality-first thinking naturally reduces spend. Press <b>S</b> for my speaker notes, arrows/space to advance, <b>F</b> for fullscreen. Five acts: Why Quality, Foundations, Billing, Context Engineering, Verify &amp; Apply.</div>
+  </section>
+
+  <!-- 2 AGENDA -->
+  <section class="slide a1">
+    <div class="kicker">the through-line</div>
+    <h2>Write <span class="accent">as little context as required</span>, and as much as necessary</h2>
+    <p class="lede">Everything in this deck serves that one sentence. Five acts, building from why to how to proof.</p>
+    <div class="body">
+      <div class="grid g5" style="grid-template-columns:repeat(5,1fr)">
+        <div class="card hl a1" style="--acc:var(--green)"><div class="stat"><span class="big" style="color:var(--green)">01</span><span class="lbl">Why quality beats cost</span></div></div>
+        <div class="card hl" style="--acc:var(--blue)"><div class="stat"><span class="big" style="color:var(--blue)">02</span><span class="lbl">Foundations</span></div></div>
+        <div class="card hl" style="--acc:var(--purple)"><div class="stat"><span class="big" style="color:var(--purple)">03</span><span class="lbl">The billing model</span></div></div>
+        <div class="card hl" style="--acc:var(--pink)"><div class="stat"><span class="big" style="color:var(--pink)">04</span><span class="lbl">Context engineering</span></div></div>
+        <div class="card hl" style="--acc:var(--cyan)"><div class="stat"><span class="big" style="color:var(--cyan)">05</span><span class="lbl">Verify &amp; apply</span></div></div>
+      </div>
+      <div class="callout"><strong>Source base:</strong> primary GitHub &amp; Microsoft Learn docs (fact-checked) + the Microsoft Reactor talk <em>"GitHub Copilot — Token Optimization"</em> (Todd Toler, May 2026).</div>
+    </div>
+    <div class="notes"><b>Set expectations.</b> The one line to repeat all talk: "as little context as required, as much as necessary." Color-code the acts — each section divider uses these same colors. Tell them Act 4 (pink) is the longest and most practical.</div>
+  </section>
+
+  <!-- ===== ACT 1 ===== -->
+  <section class="slide section a1">
+    <div class="num">01</div>
+    <h1>Why Agent Quality Beats Cost</h1>
+    <p class="lede">The mindset shift that makes every other tip work: stop gambling, send fewer and better agents.</p>
+    <div class="notes"><b>Act 1.</b> This is the philosophical core borrowed from the Reactor talk. If they only get one act, this is it — the rest are tactics that serve this idea.</div>
+  </section>
+
+  <section class="slide a1">
+    <div class="kicker">why this matters</div>
+    <h2>The bill moved onto your desk</h2>
+    <div class="body">
+      <ul class="clean">
+        <li>GitHub shifted from <b>premium requests</b> to <b>usage-based billing</b> — which surfaced a flood of "how do we cut token spend?" questions.</li>
+        <li>GitHub <em>used to</em> absorb the cost: it made money on small requests and <b>lost money on huge-token ones</b>. Compute isn't cheap anymore.</li>
+        <li>But optimizing for cost <em>alone</em> diminishes the value you get from Copilot. The better question: <b>how do we make the most of the tokens we spend?</b></li>
+      </ul>
+      <div class="callout"><strong>Reframe:</strong> don't count tokens — make every token count.</div>
+    </div>
+    <div class="notes"><b>Motivation.</b> The billing change is the "why now." But pivot immediately away from pure cost-cutting — that's the trap. Quality is the lever that also happens to cut cost.</div>
+  </section>
+
+  <section class="slide a1">
+    <div class="kicker">the anti-pattern</div>
+    <h2>We've all been <span class="accent">gambling</span></h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card warn">
+          <span class="tag o">🚀 the NASA analogy</span>
+          <p>"If rockets were cheap, NASA could fire 20 roughly at the moon. If one lands, great. If none do, fire the next 20."</p>
+          <p>That maps <em>exactly</em> to how agents get used: little context, a lazy prompt, send it — and if it fails, just send another.</p>
+        </div>
+        <div class="card hl">
+          <h3>Why it no longer works</h3>
+          <ul class="sub" style="font-size:1rem">
+            <li>Fine at 2–4 agents/day</li>
+            <li>Unsustainable at <b>dozens–hundreds/day</b> per dev</li>
+            <li>Sessions get longer → more tokens → more cost</li>
+            <li>And now <b>you</b> pay for the misses</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout o"><strong>The wrong fix:</strong> "How do we make the fuel cheaper?" — that's just asking how to keep gambling.</div>
+    </div>
+    <div class="notes"><b>The memorable analogy.</b> Lean into the rocket image — it sticks. The punchline: making fuel cheaper = keep gambling. The right move (next slide) is sending fewer, better rockets.</div>
+  </section>
+
+  <section class="slide a1">
+    <div class="kicker">the shift</div>
+    <h2>Fewer rockets, aimed better</h2>
+    <div class="body">
+      <ul class="clean">
+        <li><b>Increase the value of each agent</b> before you send it — give it enough context to actually hit the target.</li>
+        <li>Fewer agents automatically means <b>fewer tokens</b>. Quality and cost move together.</li>
+        <li>Think <b>ROI per agent</b>, not cost per token. You can't always quantify the value cleanly, but the direction is right: optimizing cost when value is zero is useless work.</li>
+      </ul>
+      <div class="callout"><strong>Bonus:</strong> raising value usually <em>means</em> using fewer tokens — because most waste is irrelevant context the model re-reads (and you re-pay for) every single turn.</div>
+    </div>
+    <div class="notes"><b>The pivot.</b> SpaceX/NASA don't launch rockets they know will explode — they're precise. Same with agents: invest in the prompt/context up front so it lands. Fewer + better = cheaper, as a side effect.</div>
+  </section>
+
+  <section class="slide a1">
+    <div class="kicker">the math that justifies everything</div>
+    <h2>The compounding-error problem</h2>
+    <div class="body">
+      <div class="grid g3">
+        <div class="card"><div class="stat"><span class="big accent-g">99%</span><span class="lbl">accuracy per step…</span></div><p>…over 50 steps = <b class="accent-o">61%</b> overall</p></div>
+        <div class="card"><div class="stat"><span class="big accent-o">95%</span><span class="lbl">accuracy per step…</span></div><p>…over 50 steps = <b class="accent-r">8%</b> overall</p></div>
+        <div class="card hl"><div class="stat"><span class="big accent">↑</span><span class="lbl">every quality gain</span></div><p>compounds your odds of success across the whole run</p></div>
+      </div>
+      <div class="callout"><strong>LLMs are non-deterministic</strong> — they have an error margin and multi-step agent work compounds it. Each miss wastes tokens <em>and</em> spawns bug fixes, reviews, reruns, and incidents.</div>
+    </div>
+    <div class="notes"><b>This is the killer slide.</b> The 95%→8% number shocks people. It's why a small per-step quality improvement matters enormously, and it sets up the whole "deterministic guardrails / tests" section in Act 4. Non-determinism is the enemy; quality controls are the answer.</div>
+  </section>
+
+  <section class="slide a1">
+    <div class="kicker">how much should you care?</div>
+    <h2>The maturity spectrum</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card">
+          <span class="tag acc">assistant user</span>
+          <h3>~10 agents/day</h3>
+          <p>Synchronous, AI-as-assistant. Spend ~$20/mo? Saving 50% gets you to $10 — <b>not worth heavy tuning</b>. Use the basics and move on.</p>
+        </div>
+        <div class="card hl">
+          <span class="tag acc">AI engineer</span>
+          <h3>100s of async agents</h3>
+          <p>Orchestrating dozens–hundreds of agents. Every <b>1% of tokens and 1% of quality</b> compounds across the fleet — tuning pays for itself.</p>
+        </div>
+      </div>
+      <div class="callout"><strong>The tips ahead are ordered by leverage.</strong> Lower-maturity teams: focus on the first few. High-throughput teams: all of them.</div>
+    </div>
+    <div class="notes"><b>Calibrate effort.</b> Be honest that not everyone needs every optimization. This earns credibility — you're not selling busywork. Ask the room where they sit.</div>
+  </section>
+
+  <!-- ===== ACT 2 ===== -->
+  <section class="slide section a2">
+    <div class="num">02</div>
+    <h1>Foundations</h1>
+    <p class="lede">How LLMs, agents, and context windows actually work — enough to judge any token tip you read online.</p>
+    <div class="notes"><b>Act 2.</b> Short but essential. The goal: give them the mental model to evaluate the hundreds of (often wrong) token tips circulating online.</div>
+  </section>
+
+  <section class="slide a2">
+    <div class="kicker">what an llm is</div>
+    <h2>A stateless, text-in/text-out machine</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card"><h3>Word-probability engine</h3><p>Given input + training, it predicts the most probable next word (or next instruction, for code). Models got better; the principle didn't change.</p></div>
+        <div class="card hl"><h3>It has no memory</h3><p>An LLM doesn't store your conversation. "Having a conversation" means <b>re-sending the entire history</b> — every input and output, in order — on every turn.</p></div>
+      </div>
+      <div class="callout"><strong>Consequence:</strong> tokens and context <em>compound</em> as a conversation grows. Statelessness is the root cause of token cost.</div>
+    </div>
+    <div class="notes"><b>Foundational.</b> Statelessness → re-send every turn → compounding cost. This single fact explains why long threads are expensive and why /clear matters. Everything downstream traces back here.</div>
+  </section>
+
+  <section class="slide a2">
+    <div class="kicker">the core principle</div>
+    <h2>The Goldilocks rule of context</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card warn"><span class="tag o">too much</span><h3>Bias &amp; noise</h3><p>Irrelevant info biases the model toward wrong answers. It <b>can't distinguish relevant from irrelevant</b> — it weighs everything.</p></div>
+        <div class="card warn"><span class="tag o">too little</span><h3>Hallucination</h3><p>It misses critical info and <b>fills gaps by hallucinating</b>. There's no error for missing context — "the math makes no distinction between fact and hallucination."</p></div>
+      </div>
+      <div class="callout"><strong>"As little context as possible, but as much as required."</strong> Finding that band is the skill: <b>context engineering</b>.</div>
+    </div>
+    <div class="notes"><b>The thesis restated technically.</b> Both failure modes are real — over-stuffing isn't "safe." Name the skill: context engineering. This is the term they'll hear all of Act 4.</div>
+  </section>
+
+  <section class="slide a2">
+    <div class="kicker">the moving parts</div>
+    <h2>Agents are just apps. The LLM is just the model.</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card"><h3>Harnesses (the agent)</h3><ul class="sub" style="font-size:1rem"><li>VS Code Chat — where it started</li><li><b>Copilot CLI</b></li><li>Copilot Cloud Agent (github.com)</li><li>3rd-party: Claude Code, OpenAI Codex</li></ul></div>
+        <div class="card"><h3>Models (the LLM)</h3><ul class="sub" style="font-size:1rem"><li>GPT · Claude · Gemini · Microsoft models</li><li>The agent talks to the model <b>dozens of times</b> per request, on your behalf</li><li>Each call carries a token cost</li></ul></div>
+      </div>
+      <div class="callout"><strong>Your levers to steer it:</strong> the prompt · the files in your project · the agent config (instructions, skills, MCPs). The harness shapes quality — but you still drive.</div>
+    </div>
+    <div class="notes"><b>Vocabulary slide.</b> Separate harness from model — people conflate them. The "agent talks to the LLM dozens of times per turn" point previews why agent runs burn tokens. End on the levers, which Act 4 details.</div>
+  </section>
+
+  <section class="slide a2">
+    <div class="kicker">under the hood</div>
+    <h2>The context window, re-sent every loop</h2>
+    <div class="body">
+      <pre><span class="c"># Loop 1</span>
+system prompt + tool descriptions + <span class="ok">your prompt</span> + file refs   <span class="c">→ INPUT tokens</span>
+model response                                          <span class="c">→ OUTPUT tokens (pricier)</span>
+
+<span class="c"># Loop 2+</span>
+<span class="no">everything from loop 1</span> + previous responses + new input   <span class="c">→ MORE tokens</span></pre>
+      <div class="grid g3">
+        <div class="card"><div class="stat"><span class="big accent-b">≈¾</span><span class="lbl">word per token</span></div></div>
+        <div class="card"><div class="stat"><span class="big accent-b">50–200K</span><span class="lbl">smaller-model window</span></div></div>
+        <div class="card"><div class="stat"><span class="big accent-b">1M</span><span class="lbl">large models ≈ LOTR + Hobbit</span></div></div>
+      </div>
+    </div>
+    <div class="notes"><b>Make compounding concrete.</b> Walk the loops: each turn re-sends all prior turns. Don't go deep on tokenization — keep it at "prompts, files, responses cost tokens and compound." The 1M ≈ LOTR fact is a nice scale anchor.</div>
+  </section>
+
+  <section class="slide a2">
+    <div class="kicker">two failure modes to design around</div>
+    <h2>Lost in the middle · Recency bias</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card hl"><h3>🎯 Lost in the middle</h3><p>The model favors the <b>start</b> (instructions/goals) and <b>end</b> (current work), neglecting the middle. Switch tasks mid-session and it can <b>snap back</b> to the original task.</p><p class="dim">→ New context window per distinct task.</p></div>
+        <div class="card hl"><h3>⏱️ Recency bias</h3><p>Above ~<b>50%</b> capacity it starts favoring only recent content — <b>forgetting your system/original prompt</b> and drifting.</p><p class="dim">→ Keep the window under ~60–70% unless necessary.</p></div>
+      </div>
+      <div class="callout"><strong>Not absolutes</strong> ("we're not Sith") — you'll sometimes run to 80–100%, and that's fine. These are biases to manage, not laws.</div>
+    </div>
+    <div class="notes"><b>Technical depth payoff.</b> These two biases justify "new session per task" and "keep it under 70%" — which are Act 4 habits. The Sith joke is from the talk; use it to soften the rule into guidance.</div>
+  </section>
+
+  <!-- ===== ACT 3 ===== -->
+  <section class="slide section a3">
+    <div class="num">03</div>
+    <h1>The Billing Model</h1>
+    <p class="lede">What actually gets counted, what it costs, and the two highest-leverage levers — model choice and relevant context.</p>
+    <div class="notes"><b>Act 3.</b> Now the concrete billing mechanics. Two systems coexist right now (legacy multipliers vs new credits) — flag which plan the room is on.</div>
+  </section>
+
+  <section class="slide a3">
+    <div class="kicker">the 2026 shift · live now</div>
+    <h2>Premium requests → usage-based <span class="accent">AI Credits</span></h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card warn"><span class="tag o">legacy</span><h3>Premium Request Units</h3><p>1 prompt × model multiplier, against a monthly allowance. <b>Still active for legacy annual Pro/Pro+</b> until the plan expires.</p></div>
+        <div class="card hl"><span class="tag acc">current · June 1 2026</span><h3>GitHub AI Credits</h3><p><b>1 credit = $0.01.</b> Cost = model × tokens consumed (<b>input + output + cached</b>) at each model's API rate.</p></div>
+      </div>
+      <div class="callout o"><strong>Two systems are live at once.</strong> Ask the room which plan they're on. Note: code completions / Next Edit suggestions stay <b>unlimited and unmetered</b>.</div>
+    </div>
+    <div class="src">github.blog usage-based-billing · docs.github.com models-and-pricing <span class="verified">✓ verified 3-0</span></div>
+    <div class="notes"><b>Honesty:</b> this changed days ago and GitHub says it's "subject to change." Durable points: credits = tokens × rate; completions free; legacy plans still on multipliers.</div>
+  </section>
+
+  <section class="slide a3">
+    <div class="kicker">what gets counted</div>
+    <h2>Your prompts count. Tool calls don't.</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card hl"><h3 class="accent-g">✓ Counts as a request</h3><ul class="sub" style="font-size:1rem"><li>Each <b>user prompt</b> in Chat / agent mode</li><li><code>/plan</code> in CLI = one; each follow-up = another</li><li>Cloud coding agent = <b>one request per session</b> × rate</li></ul></div>
+        <div class="card"><h3 class="accent-b">✗ Doesn't add a request</h3><ul class="sub" style="font-size:1rem"><li>The agent's autonomous <b>tool calls</b></li><li>File reads/edits/terminal runs it does itself</li><li>Multi-step reasoning within a turn</li></ul></div>
+      </div>
+      <div class="callout"><strong>Implication:</strong> one well-scoped prompt that lets the agent run is cheaper than ten babysitting follow-ups. (Tokens still accrue under credit billing — but the "fewer, better prompts" lesson holds.)</div>
+    </div>
+    <div class="src">docs.github.com about-premium-requests <span class="verified">✓ 3-0</span></div>
+    <div class="notes"><b>Counterintuitive.</b> Agent mode's 40 tool calls are free (request-wise); only prompts count. Reframes "agents are expensive" → "write better single prompts." Ties to Act 1's "front-load the prompt."</div>
+  </section>
+
+  <section class="slide a3">
+    <div class="kicker">lever #1 · biggest single lever</div>
+    <h2>The multiplier spread is enormous</h2>
+    <div class="body">
+      <table>
+        <thead><tr><th>Model</th><th>Multiplier</th><th>Relative cost</th><th>Use for</th></tr></thead>
+        <tbody>
+          <tr><td>Included / base</td><td class="num accent-g">0×</td><td><span class="bar" style="width:2px"></span></td><td>Everyday Q&amp;A, boilerplate</td></tr>
+          <tr><td>Haiku 4.5 · GPT-4o</td><td class="num accent-g">0.33×</td><td><span class="bar" style="width:14px"></span></td><td>Fast edits, simple tasks</td></tr>
+          <tr><td>Gemini 2.5 Pro</td><td class="num accent-b">1×</td><td><span class="bar" style="width:42px"></span></td><td>Balanced default</td></tr>
+          <tr><td>Claude Sonnet 4.5</td><td class="num accent-o">6×</td><td><span class="bar" style="width:160px"></span></td><td>Hard multi-file reasoning</td></tr>
+          <tr><td>Claude Opus 4.5</td><td class="num accent-r">15×</td><td><span class="bar" style="width:340px"></span></td><td>Only when nothing else works</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><strong>~24–45× spread</strong> for the same prompt. The talk cites ~24× (Opus 4.7 vs GPT-5 mini); the legacy table spans 0.33×→15×. Either way: defaulting to the frontier model is the most expensive habit there is.</div>
+    </div>
+    <div class="src">docs.github.com model-multipliers (labeled "legacy") <span class="verified">✓ 2-0</span> — confirm current rates for your plan.</div>
+    <div class="notes"><b>Headline number.</b> Multipliers come from a page GitHub calls "legacy" — present as the <em>principle</em> (huge spread), not gospel figures. Under credit billing the same holds via per-token rates. Rule: default cheap/mid, escalate deliberately.</div>
+  </section>
+
+  <section class="slide a3">
+    <div class="kicker">lever #1 · how to choose</div>
+    <h2>Reasoning models aren't always better</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card"><span class="tag acc">reasoning models</span><h3>Plan &amp; think</h3><ul class="sub" style="font-size:.98rem"><li>Planning &amp; architecture</li><li>Debugging complex bugs</li><li>Synchronous work you're driving</li><li>Large-context, many-file tasks</li></ul></div>
+        <div class="card"><span class="tag acc">smaller models</span><h3>Execute</h3><ul class="sub" style="font-size:.98rem"><li>Implementation <b>after</b> planning</li><li>The reasoning already happened in the plan</li><li>Documentation, simple edits</li></ul></div>
+      </div>
+      <div class="callout o"><strong>Watch out:</strong> a reasoning model handed a tight spec may <em>reopen the plan, second-guess it, and go rogue</em>. For execution, a lighter model often gives <b>better</b> quality, not just cheaper.</div>
+    </div>
+    <div class="notes"><b>Nuance most people miss.</b> Bigger ≠ better for implementation. The "goes rogue on a tight spec" point is memorable and true. This sets up the plan→implement split in Act 4.</div>
+  </section>
+
+  <section class="slide a3">
+    <div class="kicker">lever #1 · free wins</div>
+    <h2><span class="accent">Auto</span> selection &amp; the 0× fallback</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card hl"><h3>Auto model selection</h3><p>Now <b>task-aware</b> (not just availability) — it reads your context and picks a fit. Plus a <b>10% token discount</b>. Well received in the field.</p><pre><span class="c"># a 1× model via auto:</span>
+1.0× <span class="f">→</span> <span class="ok">0.9×</span></pre></div>
+        <div class="card hl"><h3>Base-model fallback</h3><p>Spend your premium allowance and you can <b>keep working all month</b> on the 0× included model — and it's the right default for low-stakes work anyway.</p><p class="dim">May be rate-limited at peak demand.</p></div>
+      </div>
+    </div>
+    <div class="src">github.blog auto-model-selection · docs.github.com about-premium-requests <span class="verified">✓ 3-0</span></div>
+    <div class="notes"><b>Two easy wins.</b> Auto = free 10% + behavioral nudge toward cheaper models. Q&A note from the talk: auto excludes the priciest models (Opus 4.7) and leans mid-range. Fallback reframes "out of requests" as "switch to free," not "stop."</div>
+  </section>
+
+  <!-- ===== ACT 4 ===== -->
+  <section class="slide section a4">
+    <div class="num">04</div>
+    <h1>Context Engineering</h1>
+    <p class="lede">The heart of the talk. Every tip here is a context-engineering technique — discipline, workflow, guardrails, and config.</p>
+    <div class="notes"><b>Act 4 — the longest.</b> Lever #2 = provide only relevant context, expanded into five subsections. If short on time, the structure doc flags 4D/4E as trimmable.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">discipline · do this daily</div>
+    <h2>New task → new session</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card warn"><span class="tag o">anti-pattern</span><h3>One mega-thread</h3><p>Reusing a conversation for unrelated tasks drags all prior context — and its cost — into every new question, and triggers recency drift.</p></div>
+        <div class="card hl"><span class="tag acc">do this</span><h3><code>/clear</code> liberally</h3><p>Start fresh per task. <b>Tokens don't carry across sessions</b>, so throw away context without hesitation. Don't steer a session bloated past ~80%.</p></div>
+      </div>
+      <div class="callout"><strong>Speaker's preference:</strong> reach for <code>/clear</code> and restart over <code>/compact</code> — compacting can lose relevant info and cause misses (more on that shortly).</div>
+    </div>
+    <div class="notes"><b>Simplest, highest-payoff habit.</b> Reflex: finish task → /clear. Connect to Act 2's recency bias. Foreshadow the compaction caveat.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">discipline · scope the inputs</div>
+    <h2>Provide only relevant context</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card hl"><span class="tag acc">efficient</span><pre><span class="ok">#file:</span>src/auth/login.ts
+<span class="ok">#BasketAddItem</span>   <span class="c"># a single method</span></pre><p>Name the files/symbols you know are involved. Let the agent <b>discover</b> the rest itself.</p></div>
+        <div class="card warn"><span class="tag o">expensive by default</span><pre><span class="no">@workspace</span>  <span class="no">#codebase</span></pre><p>Searches the whole repo and injects snippets at high token cost. Don't attach the entire project for a small change.</p></div>
+      </div>
+      <div class="callout"><strong>Don't pre-stuff "I might need this."</strong> Give exactly what's needed and nothing more — reserve whole-codebase context for genuine discovery/navigation.</div>
+    </div>
+    <div class="src">code.visualstudio.com context docs · learn.microsoft.com context-references <span class="verified">✓ 3-0</span></div>
+    <div class="notes"><b>Copyable syntax.</b> #file/#symbol efficient; @workspace expensive. The "let the agent discover" point matters — over-providing is as bad as under-providing (Goldilocks).</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">discipline · steer from the start</div>
+    <h2>Precise prompts beat short prompts</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card warn"><h3 class="accent-r">✗ "Fix the bug."</h3><p>The agent may hunt, find the <em>wrong</em> bug, and do unrelated work — then you re-do it.</p></div>
+        <div class="card hl"><h3 class="accent-g">✓ "Issue #45 describes a bug where XY happens. Fix it."</h3><p>A couple more tokens; far fewer misses.</p></div>
+      </div>
+      <ul class="clean">
+        <li><b>Don't shrink prompts for tokens</b> — the prompt is always-on context with outsized influence. Optimize it to <em>steer correctly</em>.</li>
+        <li><b>Tell it to stop</b> when tests pass — prevents unnecessary commits/pushes/extra work.</li>
+        <li><b>Provide known context</b> up front: file locations, docs to fetch, skills to invoke.</li>
+      </ul>
+    </div>
+    <div class="notes"><b>Precision ≠ brevity.</b> The "Fix the bug" vs "Issue #45" contrast is the talk's best concrete example. "Tell it to stop" is an easy, overlooked token saver.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">discipline · the caveat</div>
+    <h2>Compact carefully</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card"><h3>What it does</h3><p><code>/compact</code> summarizes earlier turns to reclaim window space. Auto-triggers around ~80% in the CLI.</p></div>
+        <div class="card warn"><h3 class="accent-o">The risk</h3><p>It <b>loses information</b>. If that info was relevant → agent misses, and your token savings become a <b>quality loss</b>. The speaker has seen it cause hallucinations.</p></div>
+      </div>
+      <div class="callout o"><strong>Rule of thumb:</strong> prefer <code>/clear</code> + a fresh, well-scoped restart over compacting a bloated session. Use <code>/compact</code> only when the thread is genuinely still valuable.</div>
+    </div>
+    <div class="notes"><b>Honest nuance.</b> My earlier deck recommended /compact freely; the talk pushes back — the speaker rarely compacts manually. Present both: compaction is a tool, but /clear is often safer. Token savings that cause misses aren't savings.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">workflow · do this daily</div>
+    <h2>Research → Plan → Implement</h2>
+    <div class="body">
+      <div class="grid g3">
+        <div class="card"><span class="tag acc">1 · research</span><p>Load context, explore (<code>/research</code>). Pulls in lots of files — <b>not</b> needed for implementation.</p></div>
+        <div class="card"><span class="tag acc">2 · plan</span><p>Use a <b>reasoning model in plan mode</b> to produce a precise spec / to-do list that leaves no room for variance.</p></div>
+        <div class="card"><span class="tag acc">3 · implement</span><p>Execute the spec with a <b>lighter model</b> — the thinking already happened.</p></div>
+      </div>
+      <div class="callout"><strong>Use a NEW context window per phase.</strong> Doing all three in one session carries research junk through every turn — degrading quality and wasting tokens (even cached). Some duplication is worth it.</div>
+    </div>
+    <div class="notes"><b>The flagship workflow.</b> Phase isolation is the big idea — research context is poison for implementation. New window per phase. This is where model-choice (Act 3) and context discipline combine.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">workflow · scale out</div>
+    <h2>A clear spec unlocks parallel agents</h2>
+    <div class="body">
+      <ul class="clean">
+        <li>With a precise spec, <b>split work by architectural layer</b> and run multiple agents in parallel.</li>
+        <li><b>Define contracts</b> between components so each agent works independently.</li>
+        <li>Each agent carries <b>only its relevant context</b> — no shared bloat, less drift, more throughput.</li>
+      </ul>
+      <div class="callout"><strong>This is the "AI engineer" mode</strong> from Act 1's maturity spectrum — and it only works because the planning phase produced a spec tight enough to parallelize against.</div>
+    </div>
+    <div class="notes"><b>Payoff of good planning.</b> Parallelism requires contracts + scoped context. Tie back to maturity spectrum: this is what high-throughput looks like. Saves wall-clock and tokens simultaneously.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">guardrails · the antidote to compounding error</div>
+    <h2>Tests are context engineering</h2>
+    <div class="body">
+      <div class="grid g3">
+        <div class="card"><div class="stat"><span class="big accent">500</span><span class="lbl">PRs/week shipped by the Copilot CLI team</span></div></div>
+        <div class="card"><div class="stat"><span class="big accent">50%</span><span class="lbl">of their codebase is tests</span></div></div>
+        <div class="card hl"><div class="stat"><span class="big accent">99%</span><span class="lbl">a failing test snaps a drifting agent back to ~99% accuracy</span></div></div>
+      </div>
+      <div class="callout"><strong>A test is a deterministic control</strong> — it fails or it doesn't, no wiggle room. It directly counters the compounding-error problem from Act 1: the agent can't build a buggy change on a buggy change because the gate stops it.</div>
+    </div>
+    <div class="src">Microsoft Reactor talk — Copilot CLI team practice</div>
+    <div class="notes"><b>Callback to the 95%→8% slide.</b> Tests are the fix for non-determinism. The 50%-tests stat lands hard. Deterministic gates reset accuracy mid-run. This is the most underrated token-saver — bugs are the expensive thing.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">guardrails · beyond tests</div>
+    <h2>Whatever you can make deterministic, do</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card hl"><h3>Stack the gates</h3><ul class="sub" style="font-size:1rem"><li>Tests (the big one)</li><li>Linters</li><li>Security scanners</li><li>Any code-architected guardrail</li></ul></div>
+        <div class="card warn"><h3 class="accent-o">No guardrails = incidents</h3><p>Without tests the agent stacks buggy change on buggy change. It finishes faster/cheaper — but you get a bug or incident: wasted CI minutes, review cycles, reruns, human debugging that fills the <em>next</em> context window.</p></div>
+      </div>
+      <div class="callout"><strong>Shift left.</strong> 15 years of "test early" is even more true for agents than for humans — the accumulated cost of a miss dwarfs the cost of the test.</div>
+    </div>
+    <div class="notes"><b>Cost reframe.</b> The cheapest-looking run (no tests) is the most expensive once you count the incident. Shift-left is the through-line. Guardrails are context engineering because they constrain the non-deterministic model.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">config · the taxonomy</div>
+    <h2>Agent configs, ranked by impact</h2>
+    <div class="body">
+      <div class="grid g3">
+        <div class="card hl"><h3>Persistent instructions</h3><p><code>copilot-instructions.md</code> / <code>AGENTS.md</code> — <b>always-on</b>, in every request</p></div>
+        <div class="card"><h3>Custom agents</h3><p>Manually-invoked roles; can restrict tools</p></div>
+        <div class="card"><h3>Skills</h3><p>Loaded <b>dynamically</b> only when the task matches</p></div>
+        <div class="card"><h3>MCPs</h3><p>External tools — powerful but token-heavy</p></div>
+        <div class="card"><h3>Sub-agents</h3><p>A second context window for research</p></div>
+        <div class="card"><h3>Memory / scoped / prompt files</h3><p>Lower-impact, situational</p></div>
+      </div>
+      <div class="callout"><strong>Context engineering ≈ configuring these well.</strong> The next slides cover the high-impact ones.</div>
+    </div>
+    <div class="notes"><b>Map of the config landscape.</b> The key distinction to teach: always-on (instructions) vs dynamic (skills) vs isolated (sub-agents). This was entirely missing from the original deck.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">config · the always-on tax</div>
+    <h2>Keep instruction files <span class="accent">tiny</span></h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card hl"><h3>What belongs</h3><ul class="sub" style="font-size:1rem"><li><b>Non-negotiables</b> — project guardrails every agent must follow</li><li><b>Miss-prevention</b> — wrong build/test command, recurring errors</li><li><b>Output trimming</b> — "be concise, only return code"</li></ul></div>
+        <div class="card warn"><h3 class="accent-o">Myth-bust</h3><p>Instruction files <b>don't reduce tokens</b> — always-on files are injected into <em>every</em> request and <b>add</b> tokens. <span class="dim">(This claim was specifically refuted in research.)</span></p></div>
+      </div>
+      <ul class="clean">
+        <li><b>Don't AI-generate them</b> — they get "speaky" and imprecise. Write from observed behavior and iterate.</li>
+        <li><b>Recreate often</b> — the CLI team throws theirs out every ~3 months as it goes stale.</li>
+      </ul>
+    </div>
+    <div class="src">code.visualstudio.com custom-instructions · docs.github.com repository-custom-instructions <span class="verified">✓ 3-0 (myth refuted 1-2)</span></div>
+    <div class="notes"><b>Two truths:</b> (1) these are a per-request tax — keep them lean; (2) the "instructions save tokens" myth is false. Value = quality/consistency, not savings. The "recreate every 3 months" practice surprises people — these are living docs.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">config · output is the priciest</div>
+    <h2>Trim the output, not the politeness budget</h2>
+    <div class="body">
+      <ul class="clean">
+        <li><b>Output tokens are the most expensive.</b> Instruct the agent to be concise, drop niceties, and return only code where appropriate.</li>
+        <li>Research shows <b>"be concise" yields nearly the same quality</b> as elaborate prompting — you're not trading accuracy for brevity here.</li>
+        <li>The famous aside: OpenAI reportedly "lost millions" on people typing <em>please</em> and <em>thank you</em>. Same idea applies to what you ask the model to return.</li>
+      </ul>
+      <div class="callout"><strong>This is the one place to optimize for fewer tokens directly</strong> — output, via a standing instruction — because it doesn't cost you quality.</div>
+    </div>
+    <div class="notes"><b>Nuance:</b> earlier I said "don't shrink prompts for tokens" — that's INPUT. OUTPUT is different: trimming it is a real, safe saving. The politeness anecdote is a crowd-pleaser; use it to make the output-token point memorable.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">config · roles &amp; dynamic loading</div>
+    <h2>Custom agents &amp; skills</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card"><h3>Custom agents</h3><p>Force a role/workflow, invoked manually (e.g. a TDD-red agent that only writes failing tests). Write the prompt once, reuse it.</p><p><b class="accent">Restrict its tools</b> to prevent wrong paths — e.g. read-only on a GitHub issue so it can't edit it.</p></div>
+        <div class="card"><h3>Skills</h3><p>Like custom agents but <b>loaded dynamically</b> — the harness offers the skill, and the LLM pulls it in only when the task matches ("lazy context"). Keeps it out of always-on context.</p></div>
+      </div>
+      <div class="callout"><strong>Best practice for skills:</strong> don't overdo it; skip redundant ones (the model already knows React); only add capabilities the agent lacks; toss them as models evolve.</div>
+    </div>
+    <div class="notes"><b>Key distinction:</b> custom agents = manual + tool-restriction (prevents wrong paths, the real benefit); skills = dynamic/lazy (saves always-on context). Tool restriction is a small token lever but a big quality/safety lever.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">config · external tools &amp; isolation</div>
+    <h2>MCPs &amp; sub-agents — use with care</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card warn"><h3 class="accent-o">MCPs</h3><p>Add external tools but <b>dump tool descriptions into context</b> (token bloat) and can trigger <b>undesired tool calls</b>.</p><p>Playwright MCP: great for front-end, but screenshots/page-reads are token-heavy. Don't leave always-on — scope it into a custom agent.</p></div>
+        <div class="card"><h3>Sub-agents</h3><p>Open a <b>second context window</b> for a task (e.g. research), process docs there, and return <b>only a summary</b> to the main session.</p><p>Keeps the main session clean — at the cost of tokens spent in the sub-agent. Conditional optimization.</p></div>
+      </div>
+      <div class="callout"><strong>Also:</strong> Copilot memory auto-learns in the background; scoped instructions help monoliths; prompt files are fading in favor of skills/custom agents.</div>
+    </div>
+    <div class="notes"><b>MCPs are a double-edged sword</b> — deactivate unused ones. Sub-agents are powerful but not free (they spend tokens to save context). "Conditional optimization" = use when needed, not always.</div>
+  </section>
+
+  <section class="slide a4">
+    <div class="kicker">config · power-user tips</div>
+    <h2>For the high-throughput crowd</h2>
+    <div class="body">
+      <div class="grid g3">
+        <div class="card"><h3>Think in code</h3><p>Scripts to filter outputs before analysis — e.g. trim the GitHub REST API to relevant fields only.</p></div>
+        <div class="card"><h3>CLIs &gt; MCPs</h3><p>Tools like <code>gh</code> are already known to models and leaner than MCP equivalents.</p></div>
+        <div class="card"><h3>Shell output trimming</h3><p>Tools like RTK cut CLI output down to agent-relevant info.</p></div>
+        <div class="card"><h3><code>/chronicle</code></h3><p>Analyzes your CLI session logs and suggests prompt optimizations.</p></div>
+        <div class="card"><h3>Collapse tool calls</h3><p>Batch multiple calls into one to cut turns.</p></div>
+        <div class="card warn"><h3 class="accent-o">Model-specific tuning</h3><p>Only for 1000s-of-agents power users — models change too fast to be worth it otherwise.</p></div>
+      </div>
+    </div>
+    <div class="notes"><b>Advanced, trade-quality-for-tokens territory.</b> Flag these as power-user only. Chronicle is genuinely useful for anyone wanting data-driven prompt improvement. "Think in code" is the mindset: deterministic filtering beats asking the LLM to filter.</div>
+  </section>
+
+  <!-- ===== ACT 5 ===== -->
+  <section class="slide section a5">
+    <div class="num">05</div>
+    <h1>Verify, Monitor &amp; Apply</h1>
+    <p class="lede">Prove your usage is dropping — and the habits, honesty, and traits to carry forward.</p>
+    <div class="notes"><b>Act 5.</b> Tools to make the invisible visible, the takeaway list, the forward-looking traits, and an honest caveats slide.</div>
+  </section>
+
+  <section class="slide a5">
+    <div class="kicker">verify · terminal &amp; editor</div>
+    <h2>Make context visible</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card hl"><h3>Copilot CLI: <code>/context</code></h3><pre>System/Tools  ████░░░░░░
+Messages      ███░░░░░░░
+Free Space    ░░░██████░
+Buffer        ░░░░░░░░██  <span class="dim">~20%</span></pre><p><code>/compact</code> to reclaim; the window auto-compacts ~80%.</p></div>
+        <div class="card"><h3>IDE indicators</h3><ul class="sub" style="font-size:1rem"><li>Visual Studio <b>ring indicator</b> — exact % + contributor breakdown</li><li>Watch it fill as you attach files — a live gauge</li><li>The <b>debug log</b> shows what was actually sent &amp; what was cached vs not</li></ul></div>
+      </div>
+    </div>
+    <div class="src">docs.github.com copilot-cli/context-management · learn.microsoft.com context-references <span class="verified">✓ 3-0</span></div>
+    <div class="notes"><b>Demo candidate.</b> Run /context live if you can — the breakdown is the "oh, THAT's where my tokens go" moment. The debug log (from the talk's Q&A) is the deep-dive tool for learning what's cached.</div>
+  </section>
+
+  <section class="slide a5">
+    <div class="kicker">verify · org &amp; admin scale</div>
+    <h2>Dashboards, reports &amp; the billing API</h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card"><h3>Dashboards &amp; reports</h3><ul class="sub" style="font-size:1rem"><li><b>Premium-requests analytics</b> (GA Sep 2025)</li><li>Personal usage &amp; entitlements</li><li>Org/enterprise billing &amp; usage exports</li></ul></div>
+        <div class="card hl"><h3>Programmatic</h3><pre><span class="c"># REST billing/usage endpoint</span>
+GET /…/billing/usage</pre><p>Pull usage into your own monitoring. Community tool: <b>CopilotPremiumUsageMonitor</b>.</p></div>
+      </div>
+      <div class="callout"><strong>For team leads:</strong> review analytics monthly, watch for outliers (a dev on Opus-by-default), and alert on overage trajectory before the invoice.</div>
+    </div>
+    <div class="src">github.blog premium-requests-analytics · docs.github.com rest/billing/usage <span class="verified">✓ 3-0</span></div>
+    <div class="notes"><b>For managers.</b> Individual discipline + org visibility. REST API = custom dashboards/alerts. Caveat: admin reporting under the brand-new credit model is still settling.</div>
+  </section>
+
+  <section class="slide a5">
+    <div class="kicker">apply · the five tips</div>
+    <h2>If you remember five things</h2>
+    <div class="body">
+      <div class="grid g2">
+        <ul class="clean">
+          <li><b>Choose the right model</b> for the task</li>
+          <li><b>Give clear, precise guidance</b> in prompts</li>
+          <li><b>Split tasks:</b> research → plan → implement</li>
+        </ul>
+        <ul class="clean">
+          <li><b>Add deterministic guardrails</b> — tests, linters, scans</li>
+          <li><b>Keep a concise, human-written</b> instructions file</li>
+        </ul>
+      </div>
+      <div class="callout"><strong>The through-line, one more time:</strong> write as little context as required, and as much as necessary.</div>
+    </div>
+    <div class="notes"><b>The recap.</b> These five are the talk's closing list. Suggest the team pick 2–3 to adopt this sprint rather than all at once. End every section by returning to the through-line.</div>
+  </section>
+
+  <section class="slide a5">
+    <div class="kicker">apply · quick reference</div>
+    <h2>Cheat sheet by surface</h2>
+    <div class="body">
+      <table>
+        <thead><tr><th>Surface</th><th>Biggest drain</th><th>Top fix</th><th>Verify with</th></tr></thead>
+        <tbody>
+          <tr><td><b>Inline completions</b></td><td>—</td><td>Free / unmetered — use freely</td><td>n/a</td></tr>
+          <tr><td><b>Chat</b></td><td>Frontier model by reflex</td><td>Right-size · scope <code>#file</code></td><td>Ring indicator</td></tr>
+          <tr><td><b>Agent mode</b></td><td>Mega-threads, @workspace</td><td>New session · one good prompt · tests</td><td>Ring · usage page</td></tr>
+          <tr><td><b>Copilot CLI</b></td><td>Context bloat over long runs</td><td><code>/clear</code> · <code>auto</code> · phased workflow</td><td><code>/context</code></td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><strong>Per surface:</strong> completions are free, Chat rewards the right model, Agent rewards fresh scoped sessions + tests, CLI rewards <code>/clear</code> and phases.</div>
+    </div>
+    <div class="notes"><b>Screenshot slide.</b> One row per surface they use. Practical synthesis of Acts 3–5.</div>
+  </section>
+
+  <section class="slide a5">
+    <div class="kicker">apply · stay relevant</div>
+    <h2>Future-proofing traits</h2>
+    <div class="body">
+      <div class="grid g3">
+        <div class="card"><h3>Analytical skills</h3><p>Domain knowledge, understanding customers, translating requirements → tech. Agents <b>execute, they don't strategize.</b> This is your moat.</p></div>
+        <div class="card"><h3>Good architecture</h3><p>DDD, hexagonal, CQRS, event-driven — these give agents guardrails and navigation. "Semicolon debates are over; architecture is what matters."</p></div>
+        <div class="card hl"><h3>Context engineering</h3><p>You're a context engineer now. It's continuous, not set-and-forget. Tools like <code>/chronicle</code> help you improve over time.</p></div>
+      </div>
+    </div>
+    <div class="notes"><b>The inspirational close before caveats.</b> Architecture as agent guardrails is a strong point — clean boundaries prevent agent misses. Frame "context engineer" as the new core competency.</div>
+  </section>
+
+  <section class="slide a5">
+    <div class="kicker">intellectual honesty</div>
+    <h2>What's uncertain &amp; what was <span class="accent-r">debunked</span></h2>
+    <div class="body">
+      <div class="grid g2">
+        <div class="card warn"><h3 class="accent-o">Moving target</h3><ul class="sub" style="font-size:1rem"><li>Billing changed <b>days ago</b> &amp; is "subject to change"</li><li>Two systems coexist: legacy multipliers vs new credits</li><li>Multiplier figures come from a page GitHub labels "legacy"</li><li>Some talk figures (24×, "GPT-5.5", "Codex 5.3") are the speaker's, not verified</li></ul></div>
+        <div class="card"><h3 class="accent-r">Refuted — don't repeat</h3><ul class="sub" style="font-size:1rem"><li>❌ "Pro = 300 / Pro+ = 1,500 requests" — failed verification</li><li>❌ "Instruction files reduce token overhead" — they <b>add</b> tokens</li></ul></div>
+      </div>
+      <div class="callout">Confirm exact <b>allowances</b>, <b>per-model rates</b>, and <b>window sizes</b> against current GitHub docs for <em>your</em> plan before quoting numbers.</div>
+    </div>
+    <div class="notes"><b>Credibility slide.</b> Naming uncertainty earns trust with a technical audience. The two refuted claims are widely repeated — preempt the "well actually." Separate verified docs from the talk's looser figures.</div>
+  </section>
+
+  <section class="slide a5">
+    <div class="kicker">sources &amp; method</div>
+    <h2>Where this comes from</h2>
+    <div class="body">
+      <div class="grid g3">
+        <div class="card"><h3>GitHub docs</h3><ul class="sub" style="font-size:.9rem"><li>usage-based-billing announcement</li><li>models-and-pricing</li><li>about-premium-requests</li><li>copilot-cli/context-management</li><li>rest/billing/usage</li></ul></div>
+        <div class="card"><h3>Microsoft / VS Code</h3><ul class="sub" style="font-size:.9rem"><li>code.visualstudio.com — context</li><li>code.visualstudio.com — custom-instructions</li><li>learn.microsoft.com — context-references</li></ul></div>
+        <div class="card"><h3>Talk &amp; community</h3><ul class="sub" style="font-size:.9rem"><li>MS Reactor — Todd Toler, "Token Optimization"</li><li>CopilotPremiumUsageMonitor</li></ul></div>
+      </div>
+      <p class="muted">Method: multi-angle search → 25 sources → 120 claims → 3-vote adversarial verification → 23 confirmed, 2 refuted; merged with the Reactor talk transcript.</p>
+    </div>
+    <div class="notes"><b>Receipts.</b> Mostly primary vendor docs + the talk. Offer to share the cited report and the transcript. The verification method is worth a sentence — it's why the refuted claims aren't in the body.</div>
+  </section>
+
+  <section class="slide title a1">
+    <div class="logo"><span>thanks · questions</span></div>
+    <h1>Make every<br><span class="grad">token count.</span></h1>
+    <p class="lede" style="margin-top:3vh">Send fewer, better agents · right model · lean context · deterministic guardrails. The savings follow the quality.</p>
+    <div class="meta">
+      <span><b>Pick 2–3 habits</b> to adopt this sprint</span>
+      <span><b>Review</b> usage monthly</span>
+      <span><b>Iterate</b> — you're a context engineer now</span>
+    </div>
+    <div class="notes"><b>Close.</b> Thesis in three words: make every token count. Not "use Copilot less" — use it precisely. Open the floor; jump back to the cheat sheet or the compounding-error slide for Q&A.</div>
+  </section>
+
+</div>
+
+<div id="hud"><div id="prog"></div></div>
+<div id="counter">01 / 00</div>
+<div id="foot">← → / space · F fullscreen · S speaker notes</div>
+<div id="hint">GitHub Copilot · Token Savings</div>
+<div class="notes-badge">● speaker notes on</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  const counter=document.getElementById('counter');
+  const prog=document.getElementById('prog');
+  const pad=n=>String(n).padStart(2,'0');
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    counter.textContent=`${pad(i+1)} / ${pad(slides.length)}`;
+    prog.style.width=`${(i)/(slides.length-1)*100}%`;
+    slides[i].scrollTop=0;
+  }
+  function next(){show(i+1)} function prev(){show(i-1)}
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){show(0);}
+    else if(e.key==='End'){show(slides.length-1);}
+    else if(e.key.toLowerCase()==='f'){
+      if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+    else if(e.key.toLowerCase()==='s'){document.body.classList.toggle('notes-on');}
+  });
+  document.getElementById('deck').addEventListener('click',e=>{
+    if(e.target.closest('a'))return;
+    (e.clientX > window.innerWidth/2 ? next : prev)();
+  });
+  let tx=0;
+  addEventListener('touchstart',e=>tx=e.changedTouches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)(d<0?next:prev)();},{passive:true});
+  show(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saving Tokens with GitHub Copilot — Presentation Structure</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 40px 24px;
+    min-height: 100vh;
+  }
+  code {
+    font-family: 'SFMono-Regular', ui-monospace, 'Cascadia Code', Consolas, monospace;
+    color: #3fb950;
+    background: #010409;
+    padding: 1px 5px;
+    border-radius: 5px;
+    font-size: .92em;
+  }
+  .page-header { text-align: center; margin-bottom: 28px; }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #3fb950, #58a6ff, #bc8cff, #f778ba);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .page-header .subtitle { color: #8b949e; font-size: 14px; }
+  .source-note {
+    max-width: 900px; margin: 14px auto 0; font-size: 12px; color: #8b949e;
+    background: #ffffff05; border: 1px solid #30363d; border-radius: 10px; padding: 10px 16px; line-height: 1.6;
+  }
+  .source-note strong { color: #e6edf3; }
+  .timing-bar {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+    margin: 26px 0 32px; background: #ffffff08; border: 1px solid #30363d;
+    border-radius: 12px; padding: 16px;
+  }
+  .timing-bar .t-item { text-align: center; }
+  .timing-bar .t-num { font-size: 20px; font-weight: 800; }
+  .timing-bar .t-label { color: #8b949e; font-size: 11px; margin-top: 4px; }
+  .act { border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+  .act-1 { background: linear-gradient(135deg,#0e1a12,#161b22); border-left: 4px solid #3fb950; }
+  .act-2 { background: linear-gradient(135deg,#0c1422,#161b22); border-left: 4px solid #58a6ff; }
+  .act-3 { background: linear-gradient(135deg,#14101f,#161b22); border-left: 4px solid #bc8cff; }
+  .act-4 { background: linear-gradient(135deg,#1d1020,#161b22); border-left: 4px solid #f778ba; }
+  .act-5 { background: linear-gradient(135deg,#0b1d1f,#161b22); border-left: 4px solid #39c5cf; }
+  .act-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .act-badge { font-weight: 800; font-size: 12px; padding: 4px 14px; border-radius: 20px; color: #0d1117; white-space: nowrap; }
+  .badge-1 { background: #3fb950; } .badge-2 { background: #58a6ff; } .badge-3 { background: #bc8cff; }
+  .badge-4 { background: #f778ba; } .badge-5 { background: #39c5cf; }
+  .act-title { font-weight: 700; font-size: 17px; }
+  .title-1 { color: #3fb950; } .title-2 { color: #58a6ff; } .title-3 { color: #bc8cff; }
+  .title-4 { color: #f778ba; } .title-5 { color: #39c5cf; }
+  .slide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .slide-card { background: #ffffff08; border: 1px solid #30363d; border-radius: 8px; padding: 12px; }
+  .slide-card h4 { font-size: 13px; font-weight: 600; color: #e6edf3; margin-bottom: 4px; }
+  .slide-card p { font-size: 11px; color: #8b949e; line-height: 1.4; }
+  .subsection { margin-bottom: 14px; border-radius: 10px; padding: 14px; }
+  /* per-act subsection tints */
+  .sub-blue { background: #58a6ff06; border: 1px solid #58a6ff22; }
+  .sub-blue-hl { background: #58a6ff0d; border: 1px solid #58a6ff44; }
+  .sub-purple { background: #bc8cff06; border: 1px solid #bc8cff22; }
+  .sub-purple-hl { background: #bc8cff0d; border: 1px solid #bc8cff44; }
+  .sub-pink { background: #f778ba06; border: 1px solid #f778ba22; }
+  .sub-pink-hl { background: #f778ba0d; border: 1px solid #f778ba44; }
+  .sub-cyan { background: #39c5cf06; border: 1px solid #39c5cf22; }
+  .sub-cyan-hl { background: #39c5cf0d; border: 1px solid #39c5cf44; }
+  .subsection-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .lab-blue { color: #58a6ff; } .lab-purple { color: #bc8cff; }
+  .lab-pink { color: #f778ba; } .lab-cyan { color: #39c5cf; } .lab-dim { color: #8b949e; }
+  .sub-slide { background: #ffffff0d; border-radius: 8px; padding: 10px; }
+  .sub-slide h4 { color:#e6edf3; font-size:13px; font-weight:600; margin-bottom:4px; }
+  .sub-slide p { color:#8b949e; font-size:11px; line-height:1.4; }
+  .ss-blue { border: 1px solid #58a6ff33; } .ss-purple { border: 1px solid #bc8cff33; }
+  .ss-pink { border: 1px solid #f778ba33; } .ss-cyan { border: 1px solid #39c5cf33; }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+    background: #ffffff08; border: 1px solid #30363d; border-radius: 12px;
+    padding: 16px; margin-bottom: 20px; text-align: center;
+  }
+  .summary-grid .s-num { font-size: 22px; font-weight: 800; }
+  .summary-grid .s-label { color: #8b949e; font-size: 11px; margin-top: 4px; }
+  .timing-note {
+    background: #ffffff05; border: 1px solid #30363d; border-radius: 10px;
+    padding: 14px; font-size: 13px; color: #8b949e; line-height: 1.8; text-align: center;
+  }
+  .timing-note strong { color: #58a6ff; }
+  .star-badge {
+    display: inline-block; background: #3fb950; color: #0d1117; font-size: 10px;
+    font-weight: 800; padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+  }
+  .warn-badge {
+    display: inline-block; background: #e3b341; color: #0d1117; font-size: 10px;
+    font-weight: 800; padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Saving Tokens with GitHub Copilot — Presentation Structure</h1>
+  <p class="subtitle">~57 slides · ~90 minutes · Developer deep-dive workshop · Chat · Agent mode · Copilot CLI · Current as of June 2026</p>
+  <div class="source-note">
+    <strong>Sources synthesized:</strong> Primary GitHub &amp; Microsoft Learn docs (3-vote fact-checked) + Microsoft Reactor talk
+    <em>"GitHub Copilot — Token Optimization"</em> (Todd Toler, MS Sr. Cloud Solution Architect, May 2026).
+    Core thesis adopted from the talk: <strong>optimize for agent quality, not raw cost — and lower token spend follows.</strong>
+  </div>
+</div>
+
+<!-- Timing bar -->
+<div class="timing-bar">
+  <div class="t-item"><div class="t-num" style="color:#3fb950;">12 min</div><div class="t-label">Act 1 — Why Quality Beats Cost</div></div>
+  <div class="t-item"><div class="t-num" style="color:#58a6ff;">12 min</div><div class="t-label">Act 2 — Foundations</div></div>
+  <div class="t-item"><div class="t-num" style="color:#bc8cff;">15 min</div><div class="t-label">Act 3 — The Billing Model</div></div>
+  <div class="t-item"><div class="t-num" style="color:#f778ba;">30 min</div><div class="t-label">Act 4 — Context Engineering</div></div>
+  <div class="t-item"><div class="t-num" style="color:#39c5cf;">15 min</div><div class="t-label">Act 5 — Verify &amp; Apply</div></div>
+</div>
+
+<!-- ACT 1 -->
+<div class="act act-1">
+  <div class="act-header">
+    <span class="act-badge badge-1">ACT 1 · 12 min</span>
+    <span class="act-title title-1">Why Agent Quality Beats Cost (The Thesis)</span>
+  </div>
+  <div class="slide-grid">
+    <div class="slide-card"><h4>Title &amp; Agenda</h4><p>Make every token count — optimize quality, and lower spend follows. Map of the 5 acts</p></div>
+    <div class="slide-card"><h4>Why This Matters</h4><p>GitHub moved from premium requests → usage-based billing; cost-only focus diminishes Copilot's value</p></div>
+    <div class="slide-card"><h4>The "Gambling" Anti-Pattern</h4><p>NASA analogy: fire 20 rockets at the moon, hope one lands — little context, lazy prompt, retry on fail</p></div>
+    <div class="slide-card"><h4>Why Gambling Broke</h4><p>Fine at 2–4 agents/day; unsustainable at dozens–hundreds/day — and the cost now shifts to you</p></div>
+    <div class="slide-card"><h4>Make Every Token Count</h4><p>Don't make the fuel cheaper (= keep gambling). Send fewer, higher-quality agents → fewer tokens automatically</p></div>
+    <div class="slide-card"><h4>The Compounding-Error Problem</h4><p>99% accuracy/step × 50 steps = 61%; 95% × 50 = 8%. Every quality gain compounds your success odds</p></div>
+    <div class="slide-card"><h4>Reducing Context = Both Levers</h4><p>Bloated context is re-paid every turn; trimming it improves quality AND cost at the same time</p></div>
+    <div class="slide-card"><h4>The Maturity Spectrum</h4><p>~10 agents/day: low ROI on tuning. "AI engineer" with 100s of async agents: every % compounds</p></div>
+  </div>
+</div>
+
+<!-- ACT 2 -->
+<div class="act act-2">
+  <div class="act-header">
+    <span class="act-badge badge-2">ACT 2 · 12 min</span>
+    <span class="act-title title-2">Foundations — How LLMs, Agents &amp; Context Windows Work</span>
+  </div>
+
+  <!-- 2A -->
+  <div class="subsection sub-blue">
+    <div class="subsection-label lab-blue">2A · LLM &amp; Token Mechanics</div>
+    <div class="slide-grid">
+      <div class="slide-card"><h4>Stateless Text Machines</h4><p>LLM = word-probability, text-in/text-out; it has no memory of prior conversation</p></div>
+      <div class="slide-card"><h4>The Goldilocks Rule</h4><p>"As little context as possible, as much as required" — the model can't tell relevant from irrelevant</p></div>
+      <div class="slide-card"><h4>Too Little → Hallucination</h4><p>No error for missing info; the model fills gaps — "the math makes no distinction between fact &amp; hallucination"</p></div>
+      <div class="slide-card"><h4>Agents, Harnesses &amp; Models</h4><p>Agent = app. Harnesses: VS Code Chat, CLI, Cloud Agent, Claude Code/Codex. LLM = GPT/Claude/Gemini</p></div>
+      <div class="slide-card"><h4>Re-Sent Every Turn</h4><p>Each loop resends the full history: system prompt + tools + input + output (pricier). It compounds</p></div>
+      <div class="slide-card"><h4>Token Scale</h4><p>1 token ≈ ¾ word. 50–200K small models, up to 1M large (≈ LOTR trilogy + The Hobbit)</p></div>
+    </div>
+  </div>
+
+  <!-- 2B -->
+  <div class="subsection sub-blue-hl">
+    <div class="subsection-label lab-blue">2B · Two Context-Window Failure Modes <span class="star-badge">KNOW THESE</span></div>
+    <div class="slide-grid">
+      <div class="sub-slide ss-blue"><h4>Lost in the Middle</h4><p>Model favors the start (instructions) + end (current work); switching tasks mid-session snaps it back → new window per task</p></div>
+      <div class="sub-slide ss-blue"><h4>Recency Bias</h4><p>Above ~50% capacity it forgets system/original prompt &amp; drifts — keep the window under ~60–70%</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ACT 3 -->
+<div class="act act-3">
+  <div class="act-header">
+    <span class="act-badge badge-3">ACT 3 · 15 min</span>
+    <span class="act-title title-3">The Billing Model — What Actually Gets Counted</span>
+  </div>
+
+  <!-- 3A -->
+  <div class="subsection sub-purple">
+    <div class="subsection-label lab-purple">3A · How Billing Works</div>
+    <div class="slide-grid">
+      <div class="slide-card"><h4>The 2026 Shift <span class="warn-badge">NEW</span></h4><p>June 1, 2026: premium-request units → usage-based GitHub AI Credits (1 credit = $0.01)</p></div>
+      <div class="slide-card"><h4>Credits = Tokens × Rate</h4><p>Cost driven by input + output + cached tokens at each model's published API rate</p></div>
+      <div class="slide-card"><h4>Legacy Premium Requests</h4><p>Still active for legacy annual Pro/Pro+ — both systems are live at once</p></div>
+      <div class="slide-card"><h4>What Counts as a Request</h4><p>Your prompts count; the agent's autonomous tool calls do NOT</p></div>
+      <div class="slide-card"><h4>The Multiplier Table</h4><p>0× base · 0.33× Haiku/GPT-4o · 1× Gemini 2.5 Pro · 6× Sonnet 4.5 · 15× Opus 4.5</p></div>
+      <div class="slide-card"><h4>Plan Allowances <span class="warn-badge">VERIFY LIVE</span></h4><p>Pro / Pro+ / Business / Enterprise tiers — confirm exact numbers in current docs</p></div>
+    </div>
+  </div>
+
+  <!-- 3B - highlighted -->
+  <div class="subsection sub-purple-hl">
+    <div class="subsection-label lab-purple">3B · The Two Biggest Levers <span class="star-badge">HIGH LEVERAGE</span></div>
+    <div class="slide-grid">
+      <div class="sub-slide ss-purple"><h4>Right-Size the Model</h4><p>~24× gap (Opus 4.7 vs GPT-5 mini). Reasoning models for planning; small models for implementation</p></div>
+      <div class="sub-slide ss-purple"><h4>Reasoning ≠ Always Better</h4><p>On a tight spec a reasoning model second-guesses &amp; "goes rogue" — use a lighter model to execute</p></div>
+      <div class="sub-slide ss-purple"><h4>Auto Model Selection</h4><p>Now task-aware (not just availability) + a 10% token discount — well received</p></div>
+      <div class="sub-slide ss-purple"><h4>Base-Model Fallback</h4><p>0× included model after allowance is spent — keep working free for low-stakes tasks</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ACT 4 -->
+<div class="act act-4">
+  <div class="act-header">
+    <span class="act-badge badge-4">ACT 4 · 30 min</span>
+    <span class="act-title title-4">Context Engineering — The Practical Controls (The Heart)</span>
+  </div>
+
+  <!-- 4A -->
+  <div class="subsection sub-pink-hl">
+    <div class="subsection-label lab-pink">4A · Context Discipline <span class="star-badge">DO THIS DAILY</span></div>
+    <div class="slide-grid">
+      <div class="sub-slide ss-pink"><h4>New Task → New Session</h4><p><code>/clear</code> liberally; tokens don't carry across sessions, so throw away context without hesitation</p></div>
+      <div class="sub-slide ss-pink"><h4>Only Relevant Context</h4><p>Don't pre-stuff "might need this"; let the agent discover files. Don't attach the whole codebase</p></div>
+      <div class="sub-slide ss-pink"><h4>Precise, Steering Prompts</h4><p>"Fix the bug" ❌ → "Issue #45: XY happens, fix it" ✅. Tell it to STOP when tests pass; give known file paths</p></div>
+      <div class="sub-slide ss-pink"><h4>Compact Carefully</h4><p><code>/compact</code> loses info → misses/hallucinations; speaker prefers <code>/clear</code> + restart over compacting</p></div>
+    </div>
+  </div>
+
+  <!-- 4B -->
+  <div class="subsection sub-pink-hl">
+    <div class="subsection-label lab-pink">4B · The Phased Workflow <span class="star-badge">DO THIS DAILY</span></div>
+    <div class="slide-grid">
+      <div class="sub-slide ss-pink"><h4>Research → Plan → Implement</h4><p>A new context window per phase; don't carry research junk into implementation and pay for it every turn</p></div>
+      <div class="sub-slide ss-pink"><h4>Plan Mode + Reasoning</h4><p>Use reasoning models in plan mode to produce a precise spec / to-do list — no room for variance</p></div>
+      <div class="sub-slide ss-pink"><h4>Parallel Agents by Layer</h4><p>Split a clear spec by architecture layer, define contracts; each agent carries only its relevant context</p></div>
+    </div>
+  </div>
+
+  <!-- 4C -->
+  <div class="subsection sub-pink">
+    <div class="subsection-label lab-pink">4C · Deterministic Guardrails</div>
+    <div class="slide-grid">
+      <div class="slide-card"><h4>Tests Are Context Engineering</h4><p>Copilot CLI team ships ~500 PRs/week; #1 practice is tests — 50% of their codebase is tests</p></div>
+      <div class="slide-card"><h4>Reset the Compounding Error</h4><p>A failing test is a deterministic gate — it stops a drifting agent and snaps accuracy back to ~99%</p></div>
+      <div class="slide-card"><h4>Beyond Tests</h4><p>Linters, security scanners, code guardrails. No tests → stacked bugs → incidents (far higher total cost)</p></div>
+    </div>
+  </div>
+
+  <!-- 4D -->
+  <div class="subsection sub-pink">
+    <div class="subsection-label lab-pink">4D · Agent Config Taxonomy</div>
+    <div class="slide-grid">
+      <div class="slide-card"><h4>Persistent Instructions</h4><p>copilot-instructions.md / AGENTS.md are always-on — keep tiny: non-negotiables + miss-prevention</p></div>
+      <div class="slide-card"><h4>Write &amp; Recreate Them</h4><p>Don't AI-generate (speaky/imprecise); write from observed behavior; CLI team trashes theirs every ~3 months</p></div>
+      <div class="slide-card"><h4>Output Trimming</h4><p>"Be concise, only return code" — output tokens are the most expensive (the "politeness costs millions" point)</p></div>
+      <div class="slide-card"><h4>Custom Agents</h4><p>Manually-invoked roles (e.g. TDD-red); restrict tools to prevent wrong paths (read-only on a GitHub issue)</p></div>
+      <div class="slide-card"><h4>Skills</h4><p>Like custom agents but loaded dynamically only on a matching task ("lazy context"); avoid redundant skills</p></div>
+      <div class="slide-card"><h4>MCPs, Sub-agents &amp; Memory</h4><p>MCPs bloat tool descriptions (scope Playwright into custom agents); sub-agents = 2nd window returning summaries; memory auto-learns</p></div>
+    </div>
+  </div>
+
+  <!-- 4E -->
+  <div class="subsection sub-pink">
+    <div class="subsection-label lab-pink">4E · Power-User Tips</div>
+    <div class="slide-grid">
+      <div class="slide-card"><h4>Think in Code</h4><p>Write scripts to filter outputs before analysis — e.g. trim the GitHub REST API to relevant fields only</p></div>
+      <div class="slide-card"><h4>CLIs &gt; MCPs</h4><p>CLI tools like <code>gh</code> are already known to models and leaner than their MCP equivalents</p></div>
+      <div class="slide-card"><h4>Shell Output Trimming</h4><p>Tools like RTK trim CLI output down to agent-relevant information only</p></div>
+      <div class="slide-card"><h4><code>/chronicle</code></h4><p>Analyzes your Copilot CLI session logs and suggests prompt optimizations</p></div>
+      <div class="slide-card"><h4>Collapse Tool Calls</h4><p>Batch multiple tool calls into one to cut turns; model-specific tuning (power users w/ 1000s of agents only)</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ACT 5 -->
+<div class="act act-5">
+  <div class="act-header">
+    <span class="act-badge badge-5">ACT 5 · 15 min</span>
+    <span class="act-title title-5">Verify, Monitor &amp; Apply (Everyone)</span>
+  </div>
+
+  <!-- 5A -->
+  <div class="subsection sub-cyan">
+    <div class="subsection-label lab-cyan">5A · Verification &amp; Monitoring Toolkit</div>
+    <div class="slide-grid">
+      <div class="sub-slide ss-cyan"><h4>Copilot CLI: <code>/context</code></h4><p>Visual breakdown — System/Tools, Messages, Free Space, Buffer; <code>/compact</code> to reclaim</p></div>
+      <div class="sub-slide ss-cyan"><h4>IDE Ring Indicator</h4><p>Visual Studio context-window ring — exact % used + contributor breakdown in real time</p></div>
+      <div class="sub-slide ss-cyan"><h4>The Debug Log</h4><p>Inspect what was actually sent each turn and what was cached vs. not — manual but invaluable when learning</p></div>
+      <div class="sub-slide ss-cyan"><h4>Org Dashboards &amp; REST API</h4><p>Premium-requests analytics (GA Sep 2025), usage/entitlements, billing API, CopilotPremiumUsageMonitor</p></div>
+    </div>
+  </div>
+
+  <!-- 5B -->
+  <div class="subsection sub-cyan-hl">
+    <div class="subsection-label lab-cyan">5B · Putting It Together <span class="star-badge">THE TAKEAWAYS</span></div>
+    <div class="slide-grid">
+      <div class="sub-slide ss-cyan"><h4>The 5 Headline Tips</h4><p>Right model · precise prompts · split tasks (research→plan→implement) · deterministic guardrails · concise instructions</p></div>
+      <div class="sub-slide ss-cyan"><h4>Cheat Sheet by Surface</h4><p>Completions = free · Chat = right model · Agent = fresh sessions · CLI = <code>/clear</code> + <code>/context</code></p></div>
+      <div class="sub-slide ss-cyan"><h4>Future-Proofing Traits</h4><p>Analytical/domain skills + good architecture (DDD, hexagonal, CQRS, event-driven) as agent guardrails</p></div>
+    </div>
+  </div>
+
+  <!-- 5C -->
+  <div class="subsection sub-cyan">
+    <div class="subsection-label lab-dim">5C · Honesty &amp; Wrap-up</div>
+    <div class="slide-grid">
+      <div class="slide-card"><h4>What's Uncertain</h4><p>Billing changed days ago &amp; is "subject to change"; legacy multipliers are labeled legacy by GitHub</p></div>
+      <div class="slide-card"><h4>Refuted — Don't Repeat</h4><p>"Pro=300/Pro+=1,500" failed verification; "instructions cut tokens" is false (they add tokens)</p></div>
+      <div class="slide-card"><h4>Sources &amp; Method</h4><p>Primary GitHub/MS docs + Reactor talk (Todd Toler); 25 sources → 120 claims → 3-vote verification</p></div>
+      <div class="slide-card"><h4>What To Do Next + Q&amp;A</h4><p>Adopt 2–3 habits, review usage monthly. Through-line: "as little context as required, as much as necessary"</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-grid">
+  <div class="s-item"><div class="s-num" style="color:#3fb950;">8</div><div class="s-label">Act 1 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#58a6ff;">8</div><div class="s-label">Act 2 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#bc8cff;">10</div><div class="s-label">Act 3 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#f778ba;">21</div><div class="s-label">Act 4 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#39c5cf;">11</div><div class="s-label">Act 5 slides</div></div>
+  <div class="s-item"><div class="s-num" style="color:#e6edf3;">~58</div><div class="s-label">Total slides</div></div>
+</div>
+
+<div class="timing-note">
+  Act 1: 12 min &nbsp;·&nbsp; Act 2: 12 min &nbsp;·&nbsp; Act 3: 15 min &nbsp;·&nbsp; <em>5-min break</em> &nbsp;·&nbsp; Act 4: 30 min &nbsp;·&nbsp; Act 5: 15 min<br>
+  <strong>Recommended total session: ~90 minutes</strong> &nbsp;·&nbsp; Trim Act 4 subsections (4D/4E) for a tighter ~60-min version
+</div>
+
+</body>
+</html>

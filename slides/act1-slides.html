@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Act 1 · Why Agent Quality Beats Cost — Make Every Token Count</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #010409; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e;
+    --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff; --pink: #f778ba; --cyan: #39c5cf;
+    --amber: #e3b341; --red: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+    background: #000; color: var(--text); line-height: 1.5; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  code, .mono { font-family: 'Cascadia Code', 'SFMono-Regular', ui-monospace, Consolas, monospace; }
+  code { color: var(--green); background: var(--panel2); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
+
+  /* ===== deck stage ===== */
+  #stage {
+    width: min(100vw, 177.78vh);
+    aspect-ratio: 16 / 9;
+    position: relative;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    background: var(--bg);
+    overflow: hidden;
+    padding: 4.2% 5%;
+    display: none; flex-direction: column;
+    container-type: inline-size;
+  }
+  .slide.active { display: flex; }
+
+  /* top act ribbon */
+  .ribbon { position:absolute; top:0; left:0; right:0; height: 5px; z-index:3; }
+  .r-green{background:linear-gradient(90deg,var(--green),transparent 70%);}
+
+  /* persistent footer */
+  .s-footer {
+    position:absolute; bottom: 3.2%; left: 5%; right: 5%;
+    display:flex; justify-content: space-between; align-items:center;
+    font-size: 1.45cqw; color: #6e7681; z-index:2;
+  }
+  .s-footer .right { display:flex; align-items:center; gap:1.2cqw; }
+  .s-footer .dots { display:flex; gap: 5px; }
+  .s-footer .dots i { width: .85cqw; height: .85cqw; border-radius: 50%; background: #21262d; display:block; }
+  .s-footer .dots i.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  .kicker {
+    font-size: 1.6cqw; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; margin-bottom: 1.6cqw;
+    display: flex; align-items: center; gap: 1.2cqw; color: var(--green);
+  }
+  .kicker .seg { width: 3.4cqw; height: 2px; background: var(--green); }
+
+  .img-zone {
+    border: 2px dashed #3d444d; border-radius: 1.2cqw; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap: .8cqw; color:#6e7681; text-align:center;
+    font-size: 1.4cqw; position: relative; overflow: hidden;
+  }
+  .img-zone::before {
+    content:""; position:absolute; inset:0; opacity:.5;
+    background: radial-gradient(circle at 60% 40%, #3fb95022, transparent 65%);
+  }
+  .img-zone b { color:#8b949e; font-size: 1.7cqw; position:relative; }
+  .img-zone .prompt { position: relative; max-width: 86%; font-size: 1.2cqw; line-height:1.45; color:#586069; font-style: italic; }
+
+  /* ===== TEMPLATE A — title ===== */
+  .tplA { justify-content: center; align-items: flex-start;
+    background:
+      radial-gradient(ellipse at 78% 30%, #3fb95016, transparent 55%),
+      radial-gradient(ellipse at 20% 85%, #58a6ff10, transparent 50%), var(--bg); }
+  .tplA .t-eyebrow { font-size: 1.8cqw; letter-spacing:.3em; text-transform:uppercase; color: var(--muted); font-weight:700; margin-bottom: 2cqw; }
+  .tplA h1 { font-size: 7.4cqw; font-weight: 900; line-height: 1.04; letter-spacing: -.015em;
+    background: linear-gradient(95deg, #fff 30%, var(--green) 75%, var(--blue));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .tplA .t-sub { font-size: 2.3cqw; color: var(--muted); margin-top: 1.8cqw; }
+  .tplA .t-sub code { font-size: .95em; }
+  .agenda { display:flex; gap: 1cqw; margin-top: 4.5cqw; flex-wrap: wrap; }
+  .agenda span { font-size: 1.55cqw; font-weight: 700; padding: .8cqw 1.6cqw; border-radius: 2.2cqw; border: 1px solid; background: #ffffff06; }
+  .ag-1{color:var(--green);border-color:#3fb95055;} .ag-2{color:var(--blue);border-color:#58a6ff55;}
+  .ag-3{color:var(--purple);border-color:#bc8cff55;} .ag-4{color:var(--pink);border-color:#f778ba55;}
+  .ag-5{color:var(--cyan);border-color:#39c5cf55;}
+
+  /* ===== TEMPLATE C — content + side image ===== */
+  .tplC .c-body { display:grid; grid-template-columns: 1fr 38%; gap: 4cqw; flex:1; min-height:0; margin-top: .6cqw; }
+  .tplC h2 { font-size: 4.3cqw; font-weight: 850; line-height: 1.1; letter-spacing:-.01em; margin-bottom: 2.6cqw; }
+  .tplC h2 em { font-style:normal; color: var(--green); }
+  .bullets { display:flex; flex-direction:column; gap: 1.9cqw; }
+  .bullets li { list-style:none; display:flex; gap: 1.6cqw; font-size: 2.15cqw; color: #c9d1d9; line-height: 1.45; }
+  .bullets li::before { content:"▸"; color: var(--green); font-weight: 800; flex:none; }
+  .bullets li > span { flex:1; display:inline; }
+  .callout {
+    margin-top: 2.6cqw; border-left: .45cqw solid var(--green); background: #3fb9500f;
+    border-radius: .8cqw; padding: 1.4cqw 1.8cqw; font-size: 1.9cqw; color: var(--text);
+  }
+  .callout b { color: var(--green); }
+
+  /* ===== TEMPLATE D — big stat / statement ===== */
+  .tplD { text-align:center; justify-content:center; align-items:center;
+    background: radial-gradient(ellipse at 50% 60%, #3fb95012, transparent 60%), var(--bg); }
+  .tplD .d-kicker { position:absolute; top:4.2%; left:5%; }
+  .tplD h2 { font-size: 3.4cqw; font-weight: 800; color: var(--muted); margin-bottom: 3cqw; }
+  .tplD h2 em { font-style: normal; color: var(--text); }
+  .statpair { display:flex; gap: 7cqw; align-items: stretch; }
+  .stat { display:flex; flex-direction:column; gap:.6cqw; }
+  .stat .formula { font-size: 2.2cqw; color: var(--muted); }
+  .stat .num { font-size: 10cqw; font-weight: 900; line-height:1; letter-spacing:-.02em; }
+  .num-ok { color: var(--green); text-shadow: 0 0 4cqw #3fb95044; }
+  .num-bad { color: var(--red); text-shadow: 0 0 4cqw #f8514944; }
+  .tplD .d-foot { margin-top: 3.4cqw; font-size: 2.1cqw; color: var(--text); }
+  .tplD .d-foot b { color: var(--red); }
+  /* statement variant */
+  .tplD .statement { font-size: 5.6cqw; font-weight: 900; line-height: 1.12; letter-spacing:-.015em; max-width: 92%; }
+  .tplD .statement em { font-style: normal; color: var(--green); text-shadow: 0 0 5cqw #3fb95033; }
+  .tplD .s-sub { font-size: 2.4cqw; color: var(--muted); margin-top: 2.6cqw; }
+  .tplD .s-chip { margin-top: 3cqw; font-size: 1.75cqw; color: var(--muted); border: 1px solid #3fb95044;
+    background:#3fb9500a; border-radius: 2cqw; padding: 1cqw 2cqw; max-width: 80%; font-style: italic; }
+
+  /* ===== TEMPLATE E — comparison ===== */
+  .tplE h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.6cqw; letter-spacing:-.01em; }
+  .tplE h2 em { font-style:normal; color: var(--green); }
+  .compare { display:grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw; flex:1; min-height:0; }
+  .col { border-radius: 1.4cqw; padding: 2.4cqw 2.6cqw; border: 1px solid; }
+  .col h3 { font-size: 2.1cqw; font-weight: 800; margin-bottom: 1.6cqw; display:flex; align-items:center; gap: 1cqw; }
+  .col h3 .tag { font-size: 1.2cqw; font-weight: 800; letter-spacing:.12em; padding:.3cqw 1cqw; border-radius: 1.4cqw; }
+  .col-then { background: #ffffff04; border-color: #30363d; }
+  .col-then h3 { color: var(--muted); }
+  .col-then h3 .tag { background:#21262d; color:#8b949e; }
+  .col-now { background: #3fb95008; border-color: #3fb95044; }
+  .col-now h3 { color: var(--green); }
+  .col-now h3 .tag { background:#3fb95022; color:var(--green); }
+  .col ul { margin-top: .4cqw; }
+  .col li { list-style:none; font-size: 2.0cqw; color: #c9d1d9; padding: .9cqw 0; display:flex; gap:1.1cqw; border-bottom:1px dashed #21262d; }
+  .col li:last-child { border-bottom:none; }
+  .col li::before { content:"›"; flex:none; opacity:.6; }
+  .col-then li::before { color: var(--muted); }
+  .col-now li::before { color: var(--green); }
+  .e-foot { margin-top: 2cqw; font-size: 1.85cqw; color: var(--muted); text-align:center; }
+  .e-foot b { color: var(--green); }
+
+  /* ===== TEMPLATE H — quote ===== */
+  .tplH { justify-content:center;
+    background: radial-gradient(ellipse at 25% 25%, #3fb95014, transparent 55%), var(--bg); }
+  .tplH .h-mark { font-size: 12cqw; font-weight: 900; color: #3fb95028; line-height: .6; font-family: Georgia, serif; }
+  .tplH blockquote { font-size: 3.9cqw; font-weight: 700; line-height: 1.35; max-width: 84%; letter-spacing:-.01em; }
+  .tplH blockquote em { font-style: normal; color: var(--green); }
+  .tplH .h-attr { margin-top: 2.6cqw; font-size: 1.9cqw; color: var(--muted); display:flex; align-items:center; gap: 1.4cqw; }
+  .tplH .h-attr i { width: 4cqw; height: 2px; background: var(--green); display:block; }
+  .tplH .h-cap { margin-top: 2.6cqw; display:flex; gap: 1cqw; }
+  .tplH .h-cap span { font-size: 1.55cqw; color: var(--muted); border: 1px solid var(--border); border-radius: 1.8cqw; padding: .5cqw 1.4cqw; background: #ffffff05; }
+
+  /* ===== presenter notes panel ===== */
+  #notes {
+    position: fixed; left: 0; right: 0; bottom: 0; max-height: 42vh; overflow-y: auto;
+    background: #07090df2; border-top: 2px solid var(--green); backdrop-filter: blur(8px);
+    padding: 18px 28px 22px; display: none; z-index: 50; font-size: 14px; line-height: 1.6;
+  }
+  body.show-notes #notes { display: block; }
+  #notes h4 { color: var(--green); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  #notes p { color: #c9d1d9; margin-bottom: 10px; max-width: 1100px; }
+  #notes .verified { border-left: 3px solid var(--green); padding: 8px 14px; background:#3fb9500c; border-radius: 6px; color:#8b949e; }
+  #notes .verified b { color: var(--green); }
+  #notes .warn { border-left: 3px solid var(--amber); padding: 8px 14px; background:#e3b3410c; border-radius: 6px; color:#8b949e; margin-top:8px; }
+  #notes .warn b { color: var(--amber); }
+  #notes .src { color:#6e7681; font-size:12px; margin-top:6px; font-family:'Cascadia Code',Consolas,monospace; }
+
+  /* ===== help / hint ===== */
+  #hint {
+    position: fixed; top: 14px; right: 16px; z-index: 60; font-size: 12px; color: #6e7681;
+    background: #0d1117cc; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
+    font-family:'Cascadia Code',Consolas,monospace; transition: opacity .4s; }
+  #hint b { color: var(--green); }
+  body.show-notes #hint { opacity: .25; }
+</style>
+</head>
+<body>
+
+<div id="hint">← → navigate · <b>N</b> notes · <b>F</b> fullscreen</div>
+
+<div id="stage">
+
+  <!-- ============ SLIDE 1 — Title & Agenda (Template A) ============ -->
+  <section class="slide tplA" data-notes="s1">
+    <div class="t-eyebrow">A developer deep-dive · June 2026</div>
+    <h1>Make Every<br>Token Count</h1>
+    <div class="t-sub">Saving tokens with GitHub Copilot — Chat · Agent mode · <code>CLI</code></div>
+    <div class="agenda">
+      <span class="ag-1">1 · Quality beats cost</span>
+      <span class="ag-2">2 · Foundations</span>
+      <span class="ag-3">3 · The billing model</span>
+      <span class="ag-4">4 · Context engineering</span>
+      <span class="ag-5">5 · Verify &amp; apply</span>
+    </div>
+    <div class="s-footer">
+      <span>@yourhandle</span>
+      <span>current as of June 2026 — billing is days old, details may shift</span>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 2 — Why This Matters (Template C) ============ -->
+  <section class="slide tplC" data-notes="s2">
+    <div class="ribbon r-green"></div>
+    <div class="kicker"><span class="seg"></span>Act 1 · The Thesis</div>
+    <div class="c-body">
+      <div>
+        <h2>The bill moved onto your <em>desk</em></h2>
+        <ul class="bullets">
+          <li><span>June 1, 2026: premium requests → <b>usage-based GitHub AI Credits</b></span></li>
+          <li><span>Cost now tracks <b>token consumption</b> at each model's API rate</span></li>
+          <li><span>A cost-only mindset shrinks Copilot's value; a quality mindset shrinks the bill</span></li>
+        </ul>
+        <div class="callout"><b>“</b>Optimizing costs when the value is zero is useless work.<b>”</b></div>
+      </div>
+      <div class="img-zone">
+        <b>GEMINI IMAGE · 1:1</b>
+        <span class="prompt">Sleek dark desk, a glowing green holographic invoice materializing above it, a developer's silhouetted hands at a keyboard, streams of tiny luminous particles flowing from screen into the invoice.</span>
+      </div>
+    </div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span> 2 / 8</span></div>
+  </section>
+
+  <!-- ============ SLIDE 3 — The Gambling Anti-Pattern (Template H) ============ -->
+  <section class="slide tplH" data-notes="s3">
+    <div class="ribbon r-green"></div>
+    <div class="h-mark">“</div>
+    <blockquote>If rockets were cheap, NASA could just send <em>20 rockets roughly in the direction of the moon</em>. If one of them landed — perfect. If none landed, you just send off the next 20.</blockquote>
+    <div class="h-attr"><i></i>Todd Toler · Microsoft Reactor — “GitHub Copilot: Token Optimization”</div>
+    <div class="h-cap"><span>little context</span><span>lazy prompt</span><span>retry on fail</span></div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span> 3 / 8</span></div>
+  </section>
+
+  <!-- ============ SLIDE 4 — Why Gambling Broke (Template E) ============ -->
+  <section class="slide tplE" data-notes="s4">
+    <div class="ribbon r-green"></div>
+    <div class="kicker"><span class="seg"></span>Act 1 · The Thesis</div>
+    <h2>Fine at 4 a day. <em>Fatal at 100.</em></h2>
+    <div class="compare">
+      <div class="col col-then">
+        <h3>Then <span class="tag">FLAT-RATE ERA</span></h3>
+        <ul>
+          <li>2–4 agents per day</li>
+          <li>Flat-rate / premium-request billing</li>
+          <li>A retry felt <b style="color:#8b949e">free</b> — just your time</li>
+          <li>“Fix the bug,” fire, alt-tab, repeat</li>
+        </ul>
+      </div>
+      <div class="col col-now">
+        <h3>Now <span class="tag">METERED ERA</span></h3>
+        <ul>
+          <li>Dozens–hundreds of agents per day</li>
+          <li>Per-token, usage-based billing</li>
+          <li>Every retry is <b>metered</b> — in, out &amp; cached</li>
+          <li>Same habit, completely different economics</li>
+        </ul>
+      </div>
+    </div>
+    <div class="e-foot">The cost of the gamble just shifted <b>from GitHub to you</b>.</div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span> 4 / 8</span></div>
+  </section>
+
+  <!-- ============ SLIDE 5 — Make Every Token Count (Template D · statement) ============ -->
+  <section class="slide tplD" data-notes="s5">
+    <div class="ribbon r-green"></div>
+    <div class="kicker d-kicker"><span class="seg"></span>Act 1 · The Thesis</div>
+    <div class="statement">Don't make the fuel cheaper.<br><em>Send fewer, better rockets.</em></div>
+    <div class="s-sub">higher-quality runs → fewer retries → fewer tokens, automatically</div>
+    <div class="s-chip">“We want to send few rockets with high accuracy — which will automatically optimize the fuel.”</div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span> 5 / 8</span></div>
+  </section>
+
+  <!-- ============ SLIDE 6 — The Compounding-Error Problem (Template D · stats) ============ -->
+  <section class="slide tplD" data-notes="s6">
+    <div class="ribbon r-green"></div>
+    <div class="kicker d-kicker"><span class="seg"></span>Act 1 · The Thesis</div>
+    <h2>99% per step is <em>not</em> 99%</h2>
+    <div class="statpair">
+      <div class="stat"><div class="formula mono">0.99 ^ 50 steps</div><div class="num num-ok">61%</div></div>
+      <div class="stat"><div class="formula mono">0.95 ^ 50 steps</div><div class="num num-bad">8%</div></div>
+    </div>
+    <div class="d-foot">a 50-step agent run at 95% per-step accuracy <b>almost certainly fails</b></div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span> 6 / 8</span></div>
+  </section>
+
+  <!-- ============ SLIDE 7 — Reducing Context = Both Levers (Template C) ============ -->
+  <section class="slide tplC" data-notes="s7">
+    <div class="ribbon r-green"></div>
+    <div class="kicker"><span class="seg"></span>Act 1 · The Thesis</div>
+    <div class="c-body">
+      <div>
+        <h2>Lean context is the only <em>free lunch</em></h2>
+        <ul class="bullets">
+          <li><span>Bloated context is <b>re-sent (and re-billed) every single turn</b></span></li>
+          <li><span>It also <b>degrades quality</b> — the model can't tell relevant from irrelevant</span></li>
+          <li><span>Trimming context improves quality AND cost <b>together</b></span></li>
+        </ul>
+        <div class="callout">Most “optimizations” trade one for the other. <b>This one doesn't.</b></div>
+      </div>
+      <div class="img-zone">
+        <b>GEMINI IMAGE · 1:1</b>
+        <span class="prompt">A bloated tangled sphere of dim grey data threads combed into one thin brilliant emerald strand by an elegant mechanical hand; the strand visibly brighter and sharper than the discarded mass.</span>
+      </div>
+    </div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span> 7 / 8</span></div>
+  </section>
+
+  <!-- ============ SLIDE 8 — The Maturity Spectrum (Template E) ============ -->
+  <section class="slide tplE" data-notes="s8">
+    <div class="ribbon r-green"></div>
+    <div class="kicker"><span class="seg"></span>Act 1 · The Thesis</div>
+    <h2>Where are you on the <em>curve?</em></h2>
+    <div class="compare">
+      <div class="col col-then">
+        <h3>~10 agents / day <span class="tag">EVERYONE</span></h3>
+        <ul>
+          <li>Mostly synchronous, hands-on work</li>
+          <li>Deep tuning saves maybe ~$10/mo</li>
+          <li>Adopt the cheap habits — skip the deep tuning</li>
+          <li><code>/clear</code> + right-size the model is enough</li>
+        </ul>
+      </div>
+      <div class="col col-now">
+        <h3>100s of async agents <span class="tag">POWER USER</span></h3>
+        <ul>
+          <li>The “AI engineer” workflow</li>
+          <li>1% gains compound across thousands of runs</li>
+          <li>“Every percent of quality you can add is effort well spent”</li>
+          <li>Model-specific context tuning pays off</li>
+        </ul>
+      </div>
+    </div>
+    <div class="e-foot">Calibrate honestly — later slides tag <b>EVERYONE</b> vs <b>POWER USER</b>.</div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span> 8 / 8</span></div>
+  </section>
+
+</div>
+
+<!-- ===== presenter notes (toggle with N) ===== -->
+<div id="notes"></div>
+
+<script>
+  const NOTES = {
+    s1: {
+      h: "Slide 1 · Title & Agenda",
+      p: "Open with the reframe immediately: “This is not a talk about counting tokens. It's a talk about making every token <em>count</em> — and the cheapest token is the one a <em>successful</em> agent run doesn't waste.” Set expectations: 90 minutes, break after Act 3, the heart is Act 4. Tell them the deck distinguishes documented fact from practitioner technique on every claim — they should hold you to it.",
+      v: "Thesis adopted from the Microsoft Reactor talk “GitHub Copilot — Token Optimization” (Todd Toler, May 2026): <em>“Instead of counting tokens, we want to make every token count.”</em> Billing changed June 1, 2026 — date-stamping matters.",
+      src: "Reactor talk · github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing"
+    },
+    s2: {
+      h: "Slide 2 · The bill moved onto your desk",
+      p: "Two things changed at once: billing became <b>per-token</b> (you feel every wasted token now) and agent usage <b>exploded</b>. The naive reaction is to clamp spending — fewer agents, cheaper models everywhere — which destroys the value. The right reaction is the subject of this talk: raise run quality so retries disappear.",
+      v: "GitHub's blog, verbatim: “Starting June 1, premium request units (PRUs) will be replaced by GitHub AI Credits” and credits “consumed based on token usage, including <b>input, output, and cached tokens</b>, according to the published API rates for each model.” 1 AI Credit = $0.01. Code completions stay free.",
+      src: "github.blog (primary) · docs.github.com/billing/.../github-copilot-premium-requests — 6 claims, 3-0 verified"
+    },
+    s3: {
+      h: "Slide 3 · The “gambling” anti-pattern",
+      p: "Tell the story properly — this is the emotional anchor. The old workflow: type “fix the bug,” fire the agent, alt-tab away, come back, it's wrong, fire it again. Each retry is a rocket aimed “roughly at the moon.” Contrast with SpaceX from the same talk: <em>“They give it a lot of context to get exactly where it needs to go — and they know with a high percentage it's going to make it.”</em> Show of hands: who re-ran the same prompt 3+ times today?",
+      v: "GitHub's own framing corroborates the pattern: under flat billing “a quick chat question and a multi-hour autonomous coding session can cost the user the same amount” — so gambling was rational then, and isn't now.",
+      src: "Reactor talk transcript (both quotes verbatim) · github.blog (causal framing)"
+    },
+    s4: {
+      h: "Slide 4 · Fine at 4 a day. Fatal at 100.",
+      p: "The gambling pattern was <em>rational</em> under flat-rate billing at low volume — retrying cost you nothing but time. Two curves crossed: agent volume went up 10–50×, and billing became metered. Same habit, completely different economics. This is why “I've always worked this way” stops being an argument this month.",
+      v: "The cost engine is the “agentic tax”: because agents re-send the whole conversation each step, cost grows <b>quadratically</b> with task length. A 20-step loop = ~<b>210,000</b> input tokens, not 20,000 (Augment Code, exact N(N+1)/2). Each retry restarts that quadratic bill — survivable at a few runs/day, ruinous at hundreds.",
+      src: "projectdiscovery.io/blog/how-we-cut-llm-cost-with-prompt-caching · augmentcode.com — 3-0 verified"
+    },
+    s5: {
+      h: "Slide 5 · Don't make the fuel cheaper",
+      p: "Name the two strategies explicitly. <b>Strategy 1:</b> keep gambling on cheaper models — save 50% per attempt, still make 5 attempts. <b>Strategy 2:</b> invest in context quality so attempt #1 lands — spend 20% more per attempt, make one. Strategy 2 wins on cost AND ships sooner. This single slide is the thesis; Acts 2–5 are “how.”",
+      v: "Structurally supported: agentic tasks consume ~<b>1,000× more tokens than code chat</b>, with input tokens driving cost (Stanford Digital Economy Lab, arXiv 2604.22750). A marginally cheaper per-token model still pays the quadratic tax — fewer, better runs is the real lever.",
+      src: "arXiv 2604.22750 (Stanford) · Reactor talk (thesis quote)"
+    },
+    s6: {
+      h: "Slide 6 · 99% per step is not 99%",
+      p: "Walk the math slowly — the most counter-intuitive number in the deck. An agent run is a chain of dozens of steps (read file, edit, run test, interpret output…), each probabilistic. At 99%/step you still only land <b>61%</b> of 50-step runs; at 95% you land <b>8%</b>. Consequences: (1) every small quality gain compounds; (2) you need a way to <em>reset</em> accumulated error mid-run — plant the flag, pay it off in Act 4C (tests).",
+      v: "Arithmetic exact: 0.99⁵⁰ = 60.5%, 0.95⁵⁰ = 7.7%. Two arXiv papers ground the mechanism (Ord 2505.05115; “Illusion of Diminishing Returns” 2509.09677, ICLR 2026). Reality is <b>worse</b> than p^N: per-step accuracy degrades as context fills with the model's own prior errors (self-conditioning) — which strengthens the case for lean context.",
+      src: "arXiv 2505.05115 · arXiv 2509.09677 — 3-0 verified. Frame p^N as a mechanism, not a proven law."
+    },
+    s7: {
+      h: "Slide 7 · Lean context is the only free lunch",
+      p: "Set up the rare win-win. Cheaper model? Quality risk. More retries allowed? Cost. But removing irrelevant context simultaneously cuts what you're billed <em>and</em> raises per-step accuracy (which Slide 6 showed compounds). That's why Act 4 — the heart of the talk — is Context <em>Engineering</em>, not Cost Engineering.",
+      v: "Concrete demo: ProjectDiscovery's agents run a 20K-token system prompt; on a 40-step task that's re-sent 40 times = 800K tokens of system prompt alone. Statelessness means every turn re-bills the whole window. Quality side: “context rot” (Chroma, 18 models) + “Lost in the Middle” (Stanford).",
+      src: "projectdiscovery.io — 3-0 verified · Chroma / Stanford (established principle)"
+    },
+    s8: {
+      h: "Slide 8 · Where are you on the curve?",
+      p: "Give the audience permission to <em>not</em> do everything. At 10 agents/day, model-specific context tuning is a waste of your time — but <code>/clear</code> discipline and right-sizing the model are free. At hundreds of async agents, 1% improvements compound across thousands of runs. Tell them which later slides carry the POWER USER tag (Act 4E) so they can mentally file them.",
+      v: "The frontier is moving fast: METR finds the task length agents complete at 50% reliability has <b>doubled ~every 7 months for 6 years</b>. And a GPT-5 agent (2h17m “time horizon”) reliably finishes only ~1/3 of tasks in its own range — so the async-agent future is near, and per-step quality is the differentiator.",
+      src: "metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks · metr.org/time-horizons — 3-0 verified"
+    }
+  };
+
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const notesEl = document.getElementById('notes');
+  let i = 0;
+
+  function render() {
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    const key = slides[i].dataset.notes;
+    const n = NOTES[key];
+    if (n) {
+      notesEl.innerHTML =
+        `<h4>${n.h}</h4>` +
+        `<p>${n.p}</p>` +
+        `<div class="verified"><b>✓ Verified backing:</b> ${n.v}<div class="src">${n.src}</div></div>` +
+        (n.warn ? `<div class="warn"><b>⚠ On stage:</b> ${n.warn}</div>` : '');
+    }
+  }
+  function go(n) { i = Math.max(0, Math.min(slides.length - 1, n)); render(); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(slides.length - 1);
+    else if (e.key.toLowerCase() === 'n') document.body.classList.toggle('show-notes');
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    else if (e.key >= '1' && e.key <= '8') go(parseInt(e.key, 10) - 1);
+  });
+  document.getElementById('stage').addEventListener('click', (e) => {
+    // click right half = next, left half = prev
+    const x = e.clientX / window.innerWidth;
+    go(x > 0.35 ? i + 1 : i - 1);
+  });
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Act 3 · The Billing Model — Make Every Token Count</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #010409; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e;
+    --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff; --pink: #f778ba; --cyan: #39c5cf;
+    --amber: #e3b341; --red: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+    background: #000; color: var(--text); line-height: 1.5; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  code, .mono { font-family: 'Cascadia Code', 'SFMono-Regular', ui-monospace, Consolas, monospace; }
+  code { color: var(--purple); background: var(--panel2); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
+
+  /* ===== deck stage ===== */
+  #stage {
+    width: min(100vw, 177.78vh);
+    aspect-ratio: 16 / 9;
+    position: relative;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    background: var(--bg);
+    overflow: hidden;
+    padding: 4.2% 5%;
+    display: none; flex-direction: column;
+    container-type: inline-size;
+  }
+  .slide.active { display: flex; }
+
+  /* top act ribbon */
+  .ribbon { position:absolute; top:0; left:0; right:0; height: 5px; z-index:3; }
+  .r-purple{background:linear-gradient(90deg,var(--purple),transparent 70%);}
+
+  /* persistent footer */
+  .s-footer {
+    position:absolute; bottom: 3.2%; left: 5%; right: 5%;
+    display:flex; justify-content: space-between; align-items:center;
+    font-size: 1.45cqw; color: #6e7681; z-index:2;
+  }
+  .s-footer .right { display:flex; align-items:center; gap:1.2cqw; }
+  .s-footer .dots { display:flex; gap: 5px; }
+  .s-footer .dots i { width: .85cqw; height: .85cqw; border-radius: 50%; background: #21262d; display:block; }
+  .s-footer .dots i.on { background: var(--purple); box-shadow: 0 0 6px var(--purple); }
+
+  .kicker {
+    font-size: 1.6cqw; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; margin-bottom: 1.6cqw;
+    display: flex; align-items: center; gap: 1.2cqw; color: var(--purple);
+  }
+  .kicker .seg { width: 3.4cqw; height: 2px; background: var(--purple); }
+  .badge {
+    display:inline-block; font-size: 1.35cqw; font-weight: 800; padding: .45cqw 1.4cqw;
+    border-radius: 2cqw; color: var(--bg); letter-spacing: .08em; vertical-align: middle;
+  }
+
+  .img-zone {
+    border: 2px dashed #3d444d; border-radius: 1.2cqw; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap: .8cqw; color:#6e7681; text-align:center;
+    font-size: 1.4cqw; position: relative; overflow: hidden;
+  }
+  .img-zone::before {
+    content:""; position:absolute; inset:0; opacity:.5;
+    background: radial-gradient(circle at 60% 40%, #bc8cff22, transparent 65%);
+  }
+  .img-zone b { color:#8b949e; font-size: 1.7cqw; position:relative; }
+  .img-zone .prompt { position: relative; max-width: 86%; font-size: 1.2cqw; line-height:1.45; color:#586069; font-style: italic; }
+
+  /* ===== TEMPLATE C — content + side image ===== */
+  .tplC .c-body { display:grid; grid-template-columns: 1fr 38%; gap: 4cqw; flex:1; min-height:0; margin-top: .6cqw; }
+  .tplC h2 { font-size: 4.3cqw; font-weight: 850; line-height: 1.1; letter-spacing:-.01em; margin-bottom: 2.6cqw; }
+  .tplC h2 em { font-style:normal; color: var(--purple); }
+  .bullets { display:flex; flex-direction:column; gap: 1.9cqw; }
+  .bullets li { list-style:none; display:flex; gap: 1.6cqw; font-size: 2.15cqw; color: #c9d1d9; line-height: 1.45; }
+  .bullets li::before { content:"▸"; color: var(--purple); font-weight: 800; flex:none; }
+  .bullets li > span { flex:1; display:inline; }
+  .callout {
+    margin-top: 2.6cqw; border-left: .45cqw solid var(--purple); background: #bc8cff0f;
+    border-radius: .8cqw; padding: 1.4cqw 1.8cqw; font-size: 1.9cqw; color: var(--text);
+  }
+  .callout b { color: var(--purple); }
+
+  /* ===== TEMPLATE E — comparison ===== */
+  .tplE h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.6cqw; letter-spacing:-.01em; }
+  .tplE h2 em { font-style:normal; color: var(--purple); }
+  .compare { display:grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw; flex:1; min-height:0; }
+  .col { border-radius: 1.4cqw; padding: 2.4cqw 2.6cqw; border: 1px solid; }
+  .col h3 { font-size: 2.1cqw; font-weight: 800; margin-bottom: 1.6cqw; display:flex; align-items:center; gap: 1cqw; }
+  .col h3 .tag { font-size: 1.2cqw; font-weight: 800; letter-spacing:.12em; padding:.3cqw 1cqw; border-radius: 1.4cqw; }
+  .col-then { background: #ffffff04; border-color: #30363d; }
+  .col-then h3 { color: var(--muted); }
+  .col-then h3 .tag { background:#21262d; color:#8b949e; }
+  .col-now { background: #bc8cff08; border-color: #bc8cff44; }
+  .col-now h3 { color: var(--purple); }
+  .col-now h3 .tag { background:#bc8cff22; color:var(--purple); }
+  .col ul { margin-top: .4cqw; }
+  .col li { list-style:none; font-size: 2.0cqw; color: #c9d1d9; padding: .9cqw 0; display:flex; gap:1.1cqw; border-bottom:1px dashed #21262d; }
+  .col li:last-child { border-bottom:none; }
+  .col li::before { content:"›"; flex:none; opacity:.6; }
+  .col-then li::before { color: var(--muted); }
+  .col-now li::before { color: var(--purple); }
+  .e-foot { margin-top: 2cqw; font-size: 1.85cqw; color: var(--muted); text-align:center; }
+  .e-foot b { color: var(--purple); }
+
+  /* ===== TEMPLATE F — technical / terminal ===== */
+  .tplF h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.4cqw; letter-spacing:-.01em; }
+  .tplF h2 em { font-style:normal; color: var(--purple); }
+  .tplF .f-body { display:grid; grid-template-columns: 52% 1fr; gap: 3.2cqw; flex:1; min-height:0; }
+  .term {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 1.2cqw;
+    font-family:'Cascadia Code', Consolas, monospace; font-size: 1.75cqw; padding: 2cqw 2.2cqw;
+    line-height: 1.85; color: #c9d1d9; align-self: start;
+  }
+  .term .t-bar { display:flex; gap:.7cqw; margin-bottom: 1.4cqw; }
+  .term .t-bar i { width:1.1cqw; height:1.1cqw; border-radius:50%; background:#30363d; display:block; }
+  .term .p { color: var(--purple); }
+  .term .dim { color: #6e7681; }
+  .term .err { color: var(--red); }
+  .term .ok { color: var(--green); }
+  .tplF .f-side .bullets li::before { color: var(--purple); }
+  .habit {
+    margin-top: 2.2cqw; background: #bc8cff10; border: 1px solid #bc8cff44; border-radius: .9cqw;
+    padding: 1.3cqw 1.7cqw; font-size: 1.8cqw;
+  }
+  .habit b { color: var(--purple); }
+
+  /* ===== TEMPLATE G — table/data ===== */
+  .tplG h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.4cqw; letter-spacing:-.01em; }
+  .tplG h2 em { font-style:normal; color: var(--purple); }
+  .dtable { width: 100%; border-collapse: collapse; font-size: 2cqw; }
+  .dtable th { text-align:left; font-size: 1.5cqw; letter-spacing:.15em; text-transform:uppercase; color: var(--muted); padding: 1cqw 1.6cqw; border-bottom: 1px solid var(--border); }
+  .dtable td { padding: 1.5cqw 1.6cqw; border-bottom: 1px solid #21262d; }
+  .dtable td:first-child { font-weight: 700; }
+  .dtable .r-hl td { background: #bc8cff0d; }
+  .dtable .new-chip { font-size: 1.3cqw; font-weight:800; color: var(--bg); background: var(--purple); border-radius: 1.2cqw; padding: .25cqw 1cqw; margin-left: .8cqw; vertical-align: middle; }
+  .dtable .credits { font-family:'Cascadia Code',Consolas,monospace; color: var(--purple); font-weight: 700; }
+  .dtable .sub { color: var(--muted); font-size: 1.6cqw; }
+  .tplG .g-foot { margin-top: 2cqw; font-size: 1.7cqw; color: var(--muted); }
+  .tplG .g-foot b { color: var(--amber); }
+  .tplG .g-foot b.pos { color: var(--green); }
+  .warn-chip {
+    display:inline-block; margin-top: 1.6cqw; font-size: 1.6cqw; color: var(--amber);
+    border: 1px solid #e3b34155; background: #e3b3410a; border-radius: 1.8cqw; padding: .6cqw 1.6cqw;
+  }
+  .statline { display:flex; align-items:baseline; gap: 2cqw; margin-top: 1.8cqw; }
+  .statline .num { font-size: 6.4cqw; font-weight: 900; line-height: 1; color: var(--purple); text-shadow: 0 0 4cqw #bc8cff33; }
+  .statline .lbl { font-size: 1.95cqw; color: var(--muted); max-width: 60%; }
+  .statline .lbl b { color: var(--text); }
+  /* compact variant for table + statline slides */
+  .tplG.compact h2 { margin-bottom: 1.5cqw; }
+  .tplG.compact .dtable { font-size: 1.85cqw; }
+  .tplG.compact .dtable td { padding: .95cqw 1.6cqw; }
+  .tplG.compact .dtable th { padding: .7cqw 1.6cqw; }
+  .tplG.compact .statline { margin-top: 1.3cqw; }
+  .tplG.compact .statline .num { font-size: 4.8cqw; }
+  .tplG.compact .statline .lbl { max-width: 72%; font-size: 1.8cqw; }
+  .tplG.compact .g-foot { margin-top: 1.2cqw; font-size: 1.55cqw; }
+
+  /* ===== TEMPLATE H — quote ===== */
+  .tplH { justify-content:center;
+    background: radial-gradient(ellipse at 25% 25%, #bc8cff14, transparent 55%), var(--bg); }
+  .tplH .h-mark { font-size: 12cqw; font-weight: 900; color: #bc8cff28; line-height: .6; font-family: Georgia, serif; }
+  .tplH blockquote { font-size: 3.7cqw; font-weight: 700; line-height: 1.35; max-width: 84%; letter-spacing:-.01em; }
+  .tplH blockquote em { font-style: normal; color: var(--purple); }
+  .tplH .h-attr { margin-top: 2.6cqw; font-size: 1.9cqw; color: var(--muted); display:flex; align-items:center; gap: 1.4cqw; }
+  .tplH .h-attr i { width: 4cqw; height: 2px; background: var(--purple); display:block; }
+  .tplH .h-cap { margin-top: 2.6cqw; display:flex; gap: 1cqw; flex-wrap: wrap; }
+  .tplH .h-cap span { font-size: 1.55cqw; color: var(--muted); border: 1px solid var(--border); border-radius: 1.8cqw; padding: .5cqw 1.4cqw; background: #ffffff05; }
+  .tplH .h-cap span.bad { color: var(--red); border-color: #f8514944; }
+  .tplH .h-cap span.good { color: var(--green); border-color: #3fb95044; }
+
+  /* ===== presenter notes panel ===== */
+  #notes {
+    position: fixed; left: 0; right: 0; bottom: 0; max-height: 42vh; overflow-y: auto;
+    background: #07090df2; border-top: 2px solid var(--purple); backdrop-filter: blur(8px);
+    padding: 18px 28px 22px; display: none; z-index: 50; font-size: 14px; line-height: 1.6;
+  }
+  body.show-notes #notes { display: block; }
+  #notes h4 { color: var(--purple); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  #notes p { color: #c9d1d9; margin-bottom: 10px; max-width: 1100px; }
+  #notes .verified { border-left: 3px solid var(--green); padding: 8px 14px; background:#3fb9500c; border-radius: 6px; color:#8b949e; }
+  #notes .verified b { color: var(--green); }
+  #notes .warn { border-left: 3px solid var(--amber); padding: 8px 14px; background:#e3b3410c; border-radius: 6px; color:#8b949e; margin-top:8px; }
+  #notes .warn b { color: var(--amber); }
+  #notes .src { color:#6e7681; font-size:12px; margin-top:6px; font-family:'Cascadia Code',Consolas,monospace; }
+
+  /* ===== help / hint ===== */
+  #hint {
+    position: fixed; top: 14px; right: 16px; z-index: 60; font-size: 12px; color: #6e7681;
+    background: #0d1117cc; border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
+    font-family:'Cascadia Code',Consolas,monospace; transition: opacity .4s; }
+  #hint b { color: var(--purple); }
+  body.show-notes #hint { opacity: .25; }
+</style>
+</head>
+<body>
+
+<div id="hint">← → navigate · <b>N</b> notes · <b>F</b> fullscreen</div>
+
+<div id="stage">
+
+  <!-- ============ SLIDE 17 — The 2026 Shift (Template E) ============ -->
+  <section class="slide tplE" data-notes="s17">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Billing Model <span class="badge" style="background:var(--amber);">NEW · JUNE 1</span></div>
+    <h2>June 1, 2026: <em>requests → tokens</em></h2>
+    <div class="compare">
+      <div class="col col-then">
+        <h3>Before <span class="tag">PREMIUM REQUESTS</span></h3>
+        <ul>
+          <li>Billing unit: <b style="color:#8b949e">an interaction</b></li>
+          <li>Per user prompt × model multiplier</li>
+          <li>Monthly request quota</li>
+          <li>Agent's internal work: invisible to the bill</li>
+        </ul>
+      </div>
+      <div class="col col-now">
+        <h3>Now <span class="tag">GITHUB AI CREDITS</span></h3>
+        <ul>
+          <li>Billing unit: <b style="color:var(--purple)">the tokens it moved</b></li>
+          <li>Input + output + cached, at each model's API rate</li>
+          <li><b style="color:var(--purple)">1 credit = $0.01</b></li>
+          <li>Window size, output length, turns → all map to money</li>
+        </ul>
+      </div>
+    </div>
+    <div class="e-foot">Announced Apr 27 · live June 1 — <b>days old</b>; details may still shift</div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 1 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 18 — Credits = Tokens × Rate (Template G) ============ -->
+  <section class="slide tplG" data-notes="s18">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Billing Model</div>
+    <h2>Three numbers decide your <em>bill</em></h2>
+    <table class="dtable">
+      <tr><th>Token class</th><th>What it is</th><th>Example rate / 1M · Fable 5</th></tr>
+      <tr><td>Input</td><td class="sub">what you send — context, files, history</td><td class="credits">$10.00</td></tr>
+      <tr class="r-hl"><td>Output</td><td class="sub">what the model writes</td><td class="credits">$50.00 <span class="sub">← ~5× input</span></td></tr>
+      <tr><td>Cached</td><td class="sub">reused stable prefix</td><td class="credits">$1.00 <span class="sub">← ~1/10 input</span></td></tr>
+    </table>
+    <span class="warn-chip">⚠ Long-context surcharge: above ~200–272K input, per-token rates roughly <b>double</b></span>
+    <div class="g-foot">Free &amp; unmetered on every paid plan: <b class="pos">inline completions + next edit suggestions</b></div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 2 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 19 — Legacy Premium Requests (Template C) ============ -->
+  <section class="slide tplC" data-notes="s19">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Billing Model</div>
+    <div class="c-body">
+      <div>
+        <h2>Two billing systems coexist <em>right now</em></h2>
+        <ul class="bullets">
+          <li><span><b>Annual</b> Pro/Pro+ → still on legacy premium requests until renewal</span></li>
+          <li><span><b>Monthly</b> plans → migrated to AI Credits June 1</span></li>
+          <li><span>Legacy docs &amp; multipliers still published — GitHub labels them <em style="font-style:italic">"(legacy)"</em></span></li>
+        </ul>
+        <div class="callout"><b>Know which system you are on</b> before optimizing for it — check your github.com billing page.</div>
+      </div>
+      <div class="img-zone">
+        <b>GEMINI IMAGE · 1:1</b>
+        <span class="prompt">Two parallel transit platforms in a dark futuristic station, one platform with a heavy vintage violet tram still running, the other with a sleek maglev of light particles, a few silhouetted figures crossing a bridge between them.</span>
+      </div>
+    </div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 3 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 20 — What Counts as a Request — Legacy (Template E) ============ -->
+  <section class="slide tplE" data-notes="s20">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Billing Model <span class="badge" style="background:var(--amber);">LEGACY ONLY</span></div>
+    <h2>Your prompts count. <em>The agent's work doesn't.</em></h2>
+    <div class="compare">
+      <div class="col col-then">
+        <h3>✓ Counts <span class="tag">1 PREMIUM REQUEST</span></h3>
+        <ul>
+          <li>Each user prompt — Chat, Agent mode, CLI</li>
+          <li>Model multiplier applies on top</li>
+        </ul>
+      </div>
+      <div class="col col-now">
+        <h3>✗ Doesn't count <span class="tag">FREE UNDER LEGACY</span></h3>
+        <ul>
+          <li>The agent's autonomous tool calls</li>
+          <li>File reads · test runs · intermediate steps</li>
+          <li>Everything inside one prompt's grind</li>
+        </ul>
+      </div>
+    </div>
+    <div class="e-foot">One <b>well-briefed</b> prompt that triggers 40 tool calls = 1 request · under credits, <b>every one of those calls meters</b></div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 4 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 21 — The Multiplier Table (Template G) ============ -->
+  <section class="slide tplG compact" data-notes="s21">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Billing Model <span class="badge" style="background:var(--amber);">LEGACY · ILLUSTRATIVE</span></div>
+    <h2>The spread was <em>always enormous</em></h2>
+    <table class="dtable">
+      <tr><th>Multiplier</th><th>Models (verified June 9, 2026)</th></tr>
+      <tr><td class="credits">0.33×</td><td class="sub">Claude Haiku 4.5 · GPT-4o</td></tr>
+      <tr><td class="credits">1×</td><td class="sub">Gemini 2.5 Pro</td></tr>
+      <tr><td class="credits">6× / 9×</td><td class="sub">Claude Sonnet 4.5 / 4.6</td></tr>
+      <tr class="r-hl"><td class="credits">15× / 27×</td><td class="sub">Claude Opus 4.5 / 4.7+ <span class="new-chip">RAISED JUN 1</span></td></tr>
+      <tr><td class="credits">57×</td><td class="sub">GPT-5.5</td></tr>
+    </table>
+    <div class="statline"><span class="num">~80×</span><span class="lbl">same prompt, Haiku → Opus 4.7 — <b>model choice was never a percentage lever</b></span></div>
+    <div class="g-foot"><b>Legacy framing</b> — post-June it's raw token rates, but the relative spread persists (slide 7)</div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 5 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 22 — Plan Allowances (Template G) ============ -->
+  <section class="slide tplG" data-notes="s22">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Billing Model <span class="badge" style="background:var(--green);">VERIFIED LIVE · JUN 9</span></div>
+    <h2>What your plan <em>actually includes</em></h2>
+    <table class="dtable">
+      <tr><th>Plan</th><th>Monthly AI credits</th><th>Breakdown</th></tr>
+      <tr><td>Pro · $10</td><td class="credits">1,500</td><td class="sub">1,000 base + 500 flex</td></tr>
+      <tr><td>Pro+ · $39</td><td class="credits">7,000</td><td class="sub">3,900 base + 3,100 flex</td></tr>
+      <tr class="r-hl"><td>Max · $100 <span class="new-chip">NEW TIER</span></td><td class="credits">20,000</td><td class="sub">10,000 base + 10,000 flex</td></tr>
+      <tr><td>Business / Enterprise</td><td class="credits">1,900 / 3,900</td><td class="sub">per user, pooled · promo 3,000 / 7,000 until Sept 1</td></tr>
+    </table>
+    <div class="g-foot">1 credit = $0.01 · out of credits → <b>set a paid budget, or wait for reset</b> · Free plan: completions only · flex allotments are <b>explicitly variable</b></div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 6 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 23 — Lever #1: Right-Size the Model (Template G + stat) ============ -->
+  <section class="slide tplG compact" data-notes="s23">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Two Biggest Levers <span class="badge" style="background:var(--purple);">⭐ HIGH LEVERAGE</span></div>
+    <h2>The <em>~50× decision</em> you make before typing</h2>
+    <table class="dtable">
+      <tr><th>Model (June 2026)</th><th>Input / 1M</th><th>Output / 1M</th></tr>
+      <tr><td>GPT-5.4 nano</td><td class="credits">$0.20</td><td class="credits">$1.25</td></tr>
+      <tr><td>GPT-5 mini · Raptor mini</td><td class="credits">$0.25</td><td class="credits">$2.00</td></tr>
+      <tr><td>Claude Haiku 4.5</td><td class="credits">$1.00</td><td class="credits">$5.00</td></tr>
+      <tr><td>Claude Opus 4.5–4.8</td><td class="credits">$5.00</td><td class="credits">$25.00</td></tr>
+      <tr class="r-hl"><td>Claude Fable 5</td><td class="credits">$10.00</td><td class="credits">$50.00</td></tr>
+    </table>
+    <div class="statline"><span class="num">50×</span><span class="lbl">input · <b>40×</b> output — same prompt, cheapest vs priciest. <b>Reasoning models plan · small models implement.</b></span></div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 7 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 24 — Reasoning ≠ Always Better (Template H) ============ -->
+  <section class="slide tplH" data-notes="s24">
+    <div class="ribbon r-purple"></div>
+    <div class="h-mark">“</div>
+    <blockquote>On a tight spec, <em>the genius goes rogue</em> — a reasoning model may reopen the plan, second-guess it, and head a different way.</blockquote>
+    <div class="h-attr"><i></i>Practitioner-reported · Microsoft Reactor talk + field reports — label it as such</div>
+    <div class="h-cap">
+      <span class="bad">✗ tight spec + reasoning model → re-plans, drifts, burns tokens</span>
+      <span class="good">✓ tight spec + light model → executes faithfully</span>
+    </div>
+    <div class="h-cap"><span>more capability = more initiative = more variance you didn't ask for</span></div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 8 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 25 — Auto Model Selection (Template C) ============ -->
+  <section class="slide tplC" data-notes="s25">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Two Biggest Levers <span class="badge" style="background:var(--green);">VERIFIED LIVE · JUN 9</span></div>
+    <div class="c-body">
+      <div>
+        <h2>Auto mode: task-aware, <em>minus 10%</em></h2>
+        <ul class="bullets">
+          <li><span>Now selects by <b>task fit</b>, not just availability — shipped in VS Code (May 2026)</span></li>
+          <li><span><b>10% discount on model costs</b> — documented; paid plans; Chat, CLI &amp; cloud agent</span></li>
+          <li><span>The right default when you won't run the table on the previous slide</span></li>
+        </ul>
+        <div class="callout">Override it for the <b>plan → implement split</b> — auto can't know a finished spec is coming.</div>
+      </div>
+      <div class="img-zone">
+        <b>GEMINI IMAGE · 1:1</b>
+        <span class="prompt">An elegant dark automated sorting hub where incoming luminous task-orbs are gracefully routed by violet light-rails to three different sized engine cores, each orb arriving at the perfectly matched core, one discount-like spark trailing each routed orb.</span>
+      </div>
+    </div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 9 / 10</span></div>
+  </section>
+
+  <!-- ============ SLIDE 26 — Base-Model Fallback (Template F) ============ -->
+  <section class="slide tplF" data-notes="s26">
+    <div class="ribbon r-purple"></div>
+    <div class="kicker"><span class="seg"></span>Act 3 · The Two Biggest Levers <span class="badge" style="background:var(--red);">CORRECTED · JUN 9</span></div>
+    <h2>The free fallback is legacy — <em>plan for the wall</em></h2>
+    <div class="f-body">
+      <div class="term">
+        <div class="t-bar"><i></i><i></i><i></i></div>
+        <div><span class="p">❯</span> copilot "refactor the auth module"</div>
+        <div class="err">✖ 100% of included AI credits used</div>
+        <div class="dim">  no automatic fallback to lower-cost models</div>
+        <div>  → set an additional spending budget <span class="dim">(paid · monthly)</span></div>
+        <div>  → wait for monthly reset <span class="dim">(Jul 1)</span></div>
+        <div class="ok">ℹ completions &amp; next edit suggestions still work</div>
+      </div>
+      <div class="f-side">
+        <ul class="bullets">
+          <li><span>Legacy PRU system: 0× included model kept working free — <b>credits system: gone</b></span></li>
+          <li><span>Orgs: paid overage needs the <b>"AI credit paid usage" policy</b> enabled — else hard block</span></li>
+          <li><span>Push low-stakes work to cheap models <b>before</b> the wall, not after</span></li>
+        </ul>
+        <div class="habit"><b>Habit:</b> set a budget alert at 80% — the wall should never surprise you.</div>
+      </div>
+    </div>
+    <div class="s-footer"><span>Make Every Token Count</span>
+      <span class="right"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></span> 10 / 10</span></div>
+  </section>
+
+</div>
+
+<!-- ===== presenter notes (toggle with N) ===== -->
+<div id="notes"></div>
+
+<script>
+  const NOTES = {
+    s17: {
+      h: "Slide 17 (1/10) · The 2026 shift",
+      p: "Be precise and honest: this changed <em>days ago</em>. Monthly Pro/Pro+ migrated automatically June 1; annual plans stay on legacy PRUs until renewal (slides 3–4). The unit changed from “an interaction” to “the tokens that interaction moved” — which is exactly why everything in Acts 2 and 4 (window size, output length, turns) now maps 1:1 to money.",
+      v: "Changelog verbatim: “As of June 1, all Copilot plans bill based on GitHub AI Credits consumed.” Announced Apr 27, 2026. <b>Cite docs.github.com for the $0.01 rate</b> — the blog post never states it.",
+      warn: "The changelog's “all plans” wording omits the legacy annual carve-out — reconcile it yourself on stage before someone in the audience does.",
+      src: "github.blog changelog 2026-06-01 · docs.github.com/copilot/concepts/billing — 3-0 verified"
+    },
+    s18: {
+      h: "Slide 18 (2/10) · Credits = tokens × rate",
+      p: "Three pricing mechanics to internalize — they make every later technique obvious. (1) Output is the expensive class → trimming verbosity is high-leverage (Act 4D). (2) Cached is ~10% of input → a <em>stable</em> context prefix is nearly free; churn defeats it. (3) Long-context surcharge → a bloated session doesn't cost linearly more, it can tip into a doubled tier. Relief valve: completions/NES stay unlimited — metering applies to Chat, Agent mode, CLI.",
+      v: "Live pricing table fetched June 9, 2026: Fable 5 $10 in / $1 cached / $50 out per 1M. Thresholds: &gt;272K (GPT-5.4/5.5), &gt;200K (Gemini 3.1 Pro). Docs verbatim: completions &amp; NES “not billed in AI credits… remain unlimited for all paid plans.”",
+      warn: "Anthropic models also bill a 4th category — cache <b>writes</b> at 1.25× input rate ($12.50/M on Fable 5). Mention it if asked; OpenAI/Google models don't show one.",
+      src: "docs.github.com/copilot/reference/copilot-billing/models-and-pricing (live fetch 2026-06-09)"
+    },
+    s19: {
+      h: "Slide 19 (3/10) · Two billing systems coexist",
+      p: "Practical caveat slide — half the room may still be on PRUs. The optimization advice in this talk works for both (lean context was always quality-positive), but the <em>accounting</em> differs: under PRUs your prompts count and tool calls don't (next slide); under credits every token meters. Tell them how to check: the github.com billing page shows which scheme applies.",
+      v: "Announcement verbatim: “Users on annual Pro or Pro+ plans will remain on their existing plan with premium request-based pricing until their plan expires.” GitHub maintains an entire request-based-billing-legacy docs tree. At expiry → Copilot Free, upgrade optional; early converters get prorated credits.",
+      warn: "Legacy annual users “will not receive access to new models and features” — and multipliers were raised June 1, so legacy is a worsening deal. The cohort shrinks to zero over 12 months; this slide has a shelf life.",
+      src: "github.blog announcement · docs.github.com/.../request-based-billing-legacy/what-changed-with-billing — 3-0 verified"
+    },
+    s20: {
+      h: "Slide 20 (4/10) · What counts as a request (LEGACY)",
+      p: "The most misunderstood legacy fact — and it rewards exactly the behavior this talk teaches. A single rich prompt that lets the agent grind autonomously costs one premium request; ten lazy micro-prompts cost ten. So even on the legacy system, “fewer, better rockets” is literally the billing-optimal strategy. Under credits the equivalent insight is turns: each user turn re-sends the window (slide 13).",
+      v: "Legacy docs verbatim: agent mode used “one premium request per user prompt” and autonomous actions “such as tool calls, do not” count.",
+      warn: "<b>This rule died June 1 for everyone except legacy annual.</b> Under AI Credits every agent tool call's tokens are metered — that flip is why press coverage reports 10×–50× bill jumps for agentic power users. Land the contrast hard; it's the single biggest behavioral change of the transition.",
+      src: "docs.github.com/copilot/concepts/billing/copilot-requests (legacy) · usage-based-billing-for-individuals — 3-0 verified"
+    },
+    s21: {
+      h: "Slide 21 (5/10) · The multiplier table (legacy, illustrative)",
+      p: "Present this as history that teaches a current lesson. The multiplier table is dead as a billing mechanism but perfect as intuition: model choice has always been an order-of-magnitude lever, not a percentage lever. Bridge to slide 7 (23) where the current rate table shows the same spread. Do NOT let anyone walk out quoting multipliers as current billing — say that explicitly.",
+      v: "Table fetched verbatim June 9, 2026: Haiku 4.5 = 0.33, Sonnet 4.5 = 6, Sonnet 4.6 = 9, Opus 4.5 = 15, Opus 4.6/4.7/4.8 = 27, Gemini 2.5 Pro = 1, GPT-4o = 0.33, GPT-5.5 = 57; code review = 13. The workshop's old draft values were right only for the 4.5 generation.",
+      warn: "Extremely volatile: Opus 4.7 went 7.5× → 15× → 27× in 60 days. Re-verify the morning of the talk. The draft's “0× base model” row is NOT on the current page — don't show it.",
+      src: "docs.github.com/.../request-based-billing-legacy/model-multipliers-for-annual-plans — 3-0 verified"
+    },
+    s22: {
+      h: "Slide 22 (6/10) · Plan allowances",
+      p: "These are verified against live docs days before this talk — say that, and still invite the audience to re-check, because GitHub labels the scheme subject to change. Translate to intuition: 1,500 credits = $15 of API-rate usage; on a frontier model at $50/M output that's ~300K output tokens, on GPT-5.4 nano it's ~12M — the model choice (next slide) decides whether your allowance feels enormous or evaporates. Org credits are pooled across the enterprise.",
+      v: "Docs verbatim: base credits “never change”; flex allotment “designed to adapt as the economics of AI evolve.” Business/Enterprise standard 1,900/3,900 per user; promotional 3,000/7,000 from June 1 – Sept 1, 2026. Sanity check: org allowance equals plan price at $0.01/credit. Max tier reported upgrade-only at launch.",
+      warn: "Flex values can shrink — quote them with a date qualifier. The old “Pro = 300 / Pro+ = 1,500 <em>requests</em>” numbers are dead; don't let 1,500 <em>credits</em> get confused with them.",
+      src: "docs.github.com/copilot/concepts/billing/usage-based-billing-for-individuals + -for-organizations-and-enterprises — 3-0 verified"
+    },
+    s23: {
+      h: "Slide 23 (7/10) · Lever #1: right-size the model",
+      p: "The single highest-leverage lever in the entire talk, and it costs zero effort. Most developers pin a frontier model out of habit. Heuristic: planning, architecture, gnarly debugging, large-context synthesis → frontier/reasoning model. Executing a clear spec, docs, renames, test scaffolding → small model — the quality difference is often negligible <em>because the thinking already happened</em>. Worked example from the research: a 25-call agent session (200K in / 600K cached / 30K out) ≈ 12.5 credits on GPT-5 mini vs 205 on Opus 4.7 vs 410 on Fable 5 — <b>120 sessions vs 7 vs 3 on the same $10 Pro plan</b>.",
+      v: "All rates verified by live fetch June 9, 2026 (models-and-pricing). Spread: 50× input / 40× output between GPT-5.4 nano and Fable 5. Cache sensitivity: making that example session cache-hostile takes Opus from $2.05 to $5.05 — caching alone is a ~2.5× lever.",
+      warn: "The old “~24× Opus vs GPT-5 mini” figure is NOT supported by the live table — blended it's ~16× (20× input / 12.5× output). Say “15–20×,” or use Fable-vs-mini ≈ 33× if you want the bigger truthful number.",
+      src: "docs.github.com/copilot/reference/copilot-billing/models-and-pricing (live fetch 2026-06-09) · act3-research-report.md Example B"
+    },
+    s24: {
+      h: "Slide 24 (8/10) · Reasoning ≠ always better",
+      p: "The counter-intuitive half of the lever — frontier models can be <em>worse</em> at execution, not just pricier. Reasoning models are trained to question and explore; handed a finished plan, that's a defect. Everyone who's run agents recognizes it. This sets up Act 4B's phased workflow: reasoning model writes the spec → fresh window → light model executes it.",
+      v: "Citable practitioner reports exist: Tom Yedwab, “How to keep your AI coding agent from going rogue” (May 2025) — “your agent decided the easiest way to get a test to pass was to delete the test”; the Replit rogue-agent incident (July 2025); Tim Sylvester on agents rewriting half a function and defending the guess.",
+      warn: "🧪 Practitioner-reported, NOT vendor-documented — and nothing verified ties the behavior to <em>reasoning models specifically</em>. Label the reasoning-model version as your own observed experience, on stage, explicitly.",
+      src: "arguingwithalgorithms.com/posts/technical-design-spec-pattern.html · arize.com/blog/common-ai-agent-failures · medium.com/@TimSylvester"
+    },
+    s25: {
+      h: "Slide 25 (9/10) · Auto model selection",
+      p: "Honest framing: auto mode is the “right-size the model” lever for people who won't do it manually, with a 10% sweetener. In early research this discount was likely-but-verify; as of this week it's in the docs verbatim — a nice live example of why you date-stamp claims. Caveat: auto can't know you're about to run the two-phase plan→implement workflow; for that, pick models deliberately.",
+      v: "Docs verbatim: “If you are on a paid Copilot plan, you qualify for a 10% discount on model costs while using auto model selection in Copilot Chat, Copilot CLI, or Copilot cloud agent.” Task-aware routing: changelog 2026-05-20 (“Auto model selection now routes based on your task in VS Code”); auto in CLI 2026-04-17; cloud agent 2026-05-14.",
+      warn: "It's a discount on <b>model costs</b>, not “tokens” — use the precise wording. The task-aware half rests on a single changelog post, not triple-verified; re-check it before the talk.",
+      src: "docs.github.com/copilot/concepts/billing/usage-based-billing-for-individuals · github.blog changelogs — discount 3-0 verified"
+    },
+    s26: {
+      h: "Slide 26 (10/10) · Base-model fallback — CORRECTED",
+      p: "This slide changed during prep — model the honesty you're preaching. The original structure said “keep working free on the base model after allowance”; current docs list exactly two options when credits run out, and free fallback isn't one of them. Legacy annual users still have it. Lesson for the room: in a days-old billing regime, verify before you architect a workflow around any allowance behavior. Then: BREAK — “back in 5, Act 4 is the heart.”",
+      v: "Three mutually reinforcing primary statements: budgets page — “There is no automatic fallback to lower-cost models”; announcement — “Fallback experiences will no longer be available”; changelog — continuation requires an additional spending budget, and for individuals “GitHub may limit your total additional AI Credits based on your usage patterns, billing history, and verification status.”",
+      warn: "Org gotchas: paid overage requires the “AI credit paid usage” policy enabled (else hard block when the pool is gone), and the “Stop usage when budget limit is reached” toggle is OFF by default on org/cost-center budgets. Confirm the exact policy label in the settings UI before the talk.",
+      src: "docs.github.com/copilot/concepts/billing/budgets-for-usage-based-billing · github.blog — 3-0 verified"
+    }
+  };
+
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const notesEl = document.getElementById('notes');
+  let i = 0;
+
+  function render() {
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    const key = slides[i].dataset.notes;
+    const n = NOTES[key];
+    if (n) {
+      notesEl.innerHTML =
+        `<h4>${n.h}</h4>` +
+        `<p>${n.p}</p>` +
+        `<div class="verified"><b>✓ Verified backing:</b> ${n.v}<div class="src">${n.src}</div></div>` +
+        (n.warn ? `<div class="warn"><b>⚠ On stage:</b> ${n.warn}</div>` : '');
+    }
+  }
+  function go(n) { i = Math.max(0, Math.min(slides.length - 1, n)); render(); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(slides.length - 1);
+    else if (e.key.toLowerCase() === 'n') document.body.classList.toggle('show-notes');
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    else if (e.key >= '1' && e.key <= '9') go(parseInt(e.key, 10) - 1);
+    else if (e.key === '0') go(9);
+  });
+  document.getElementById('stage').addEventListener('click', (e) => {
+    // click right half = next, left half = prev
+    const x = e.clientX / window.innerWidth;
+    go(x > 0.35 ? i + 1 : i - 1);
+  });
+
+  render();
+</script>
+</body>
+</html>

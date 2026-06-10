@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make Every Token Count — Slide Design System & Template Mockups</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #010409; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e;
+    --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff; --pink: #f778ba; --cyan: #39c5cf;
+    --amber: #e3b341; --red: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #07090d; color: var(--text); padding: 48px 24px 80px; line-height: 1.5;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; }
+  code, .mono { font-family: 'Cascadia Code', 'SFMono-Regular', ui-monospace, Consolas, monospace; }
+  code { color: var(--green); background: var(--panel2); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
+
+  /* ===== page chrome ===== */
+  .page-head { text-align: center; margin-bottom: 14px; }
+  .page-head h1 {
+    font-size: 30px; font-weight: 800;
+    background: linear-gradient(90deg, var(--green), var(--blue), var(--purple), var(--pink), var(--cyan));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-head p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .section { margin-top: 56px; }
+  .section > h2 {
+    font-size: 13px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 22px;
+  }
+  .section > h2 b { color: var(--text); }
+  .spec-note {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; color: var(--muted); margin-bottom: 18px;
+  }
+  .spec-note strong { color: var(--text); }
+  .tpl-meta { display:flex; gap:10px; flex-wrap:wrap; margin: 10px 0 40px; font-size: 12px; color: var(--muted); }
+  .tpl-meta span { background: var(--panel); border:1px solid var(--border); border-radius: 20px; padding: 4px 12px; }
+  .tpl-meta b { color: var(--text); }
+
+  /* ===== design tokens ===== */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; }
+  .swatch { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .swatch .chip { height: 56px; }
+  .swatch .lbl { padding: 8px 12px; font-size: 12px; }
+  .swatch .lbl b { display:block; color: var(--text); }
+  .swatch .lbl span { color: var(--muted); font-size: 11px; }
+  .type-scale { background: var(--panel); border:1px solid var(--border); border-radius: 12px; padding: 24px 28px; }
+  .type-row { display:flex; align-items: baseline; gap: 18px; padding: 10px 0; border-bottom: 1px dashed #21262d; }
+  .type-row:last-child { border-bottom: none; }
+  .type-row .t-spec { width: 230px; flex: none; font-size: 11px; color: var(--muted); }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px){ .grid2 { grid-template-columns: 1fr; } }
+
+  /* ===== THE SLIDE FRAME ===== */
+  .slide {
+    aspect-ratio: 16/9; width: 100%; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    position: relative; padding: 4.2% 5%;
+    display: flex; flex-direction: column;
+    box-shadow: 0 18px 50px #00000088;
+    container-type: inline-size;
+  }
+  /* top act ribbon */
+  .ribbon { position:absolute; top:0; left:0; right:0; height: 5px; }
+  .r-green{background:linear-gradient(90deg,var(--green),transparent 70%);} .r-blue{background:linear-gradient(90deg,var(--blue),transparent 70%);}
+  .r-purple{background:linear-gradient(90deg,var(--purple),transparent 70%);} .r-pink{background:linear-gradient(90deg,var(--pink),transparent 70%);}
+  .r-cyan{background:linear-gradient(90deg,var(--cyan),transparent 70%);}
+  /* persistent footer */
+  .s-footer {
+    position:absolute; bottom: 3.2%; left: 5%; right: 5%;
+    display:flex; justify-content: space-between; align-items:center;
+    font-size: 1.45cqw; color: #6e7681;
+  }
+  .s-footer .dots { display:flex; gap: 5px; }
+  .s-footer .dots i { width: .85cqw; height: .85cqw; border-radius: 50%; background: #21262d; display:block; }
+  .kicker {
+    font-size: 1.6cqw; font-weight: 800; letter-spacing: .25em; text-transform: uppercase; margin-bottom: 1.6cqw;
+    display: flex; align-items: center; gap: 1.2cqw;
+  }
+  .kicker .seg { width: 3.4cqw; height: 2px; }
+  .badge {
+    display:inline-block; font-size: 1.35cqw; font-weight: 800; padding: .45cqw 1.4cqw;
+    border-radius: 2cqw; color: var(--bg); letter-spacing: .08em; vertical-align: middle;
+  }
+  .img-zone {
+    border: 2px dashed #3d444d; border-radius: 1.2cqw; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap: .8cqw; color:#6e7681; text-align:center;
+    font-size: 1.5cqw; position: relative; overflow: hidden;
+  }
+  .img-zone::before {
+    content:""; position:absolute; inset:0; opacity:.5;
+    background: radial-gradient(circle at 60% 40%, var(--zone-glow, #58a6ff22), transparent 65%);
+  }
+  .img-zone b { color:#8b949e; font-size: 1.7cqw; position:relative; }
+  .img-zone span { position: relative; max-width: 80%; }
+
+  /* ===== TEMPLATE A — title ===== */
+  .tplA { justify-content: center; align-items: flex-start;
+    background:
+      radial-gradient(ellipse at 78% 30%, #3fb95016, transparent 55%),
+      radial-gradient(ellipse at 20% 85%, #58a6ff10, transparent 50%), var(--bg); }
+  .tplA .t-eyebrow { font-size: 1.8cqw; letter-spacing:.3em; text-transform:uppercase; color: var(--muted); font-weight:700; margin-bottom: 2cqw; }
+  .tplA h1 { font-size: 7.4cqw; font-weight: 900; line-height: 1.04; letter-spacing: -.015em;
+    background: linear-gradient(95deg, #fff 30%, var(--green) 75%, var(--blue));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .tplA .t-sub { font-size: 2.3cqw; color: var(--muted); margin-top: 1.8cqw; }
+  .tplA .t-sub code { font-size: .95em; }
+  .agenda { display:flex; gap: 1cqw; margin-top: 4.5cqw; flex-wrap: wrap; }
+  .agenda span { font-size: 1.55cqw; font-weight: 700; padding: .8cqw 1.6cqw; border-radius: 2.2cqw; border: 1px solid; background: #ffffff06; }
+  .ag-1{color:var(--green);border-color:#3fb95055;} .ag-2{color:var(--blue);border-color:#58a6ff55;}
+  .ag-3{color:var(--purple);border-color:#bc8cff55;} .ag-4{color:var(--pink);border-color:#f778ba55;}
+  .ag-5{color:var(--cyan);border-color:#39c5cf55;}
+
+  /* ===== TEMPLATE B — act divider ===== */
+  .tplB { justify-content: center;
+    background: radial-gradient(ellipse at 75% 50%, #f778ba1c, transparent 58%), var(--bg); }
+  .tplB .b-act { font-size: 11cqw; font-weight: 900; color: #f778ba14; position:absolute; right: 4%; top: -1%; letter-spacing: -.04em; }
+  .tplB h1 { font-size: 5.6cqw; font-weight: 900; line-height: 1.06; max-width: 72%; }
+  .tplB h1 em { font-style: normal; color: var(--pink); }
+  .tplB .b-sub { font-size: 2cqw; color: var(--muted); margin-top: 1.6cqw; max-width: 60%; }
+  .tplB .b-map { display:flex; gap:.8cqw; margin-top: 4cqw; }
+  .tplB .b-map i { display:block; height: .9cqw; width: 7cqw; border-radius: 1cqw; background: #21262d; }
+  .tplB .b-map i.on { background: var(--pink); box-shadow: 0 0 1.2cqw #f778ba88; }
+
+  /* ===== TEMPLATE C — content + side image ===== */
+  .tplC .c-body { display:grid; grid-template-columns: 1fr 38%; gap: 4cqw; flex:1; min-height:0; margin-top: .6cqw; }
+  .tplC h2 { font-size: 4.3cqw; font-weight: 850; line-height: 1.1; letter-spacing:-.01em; margin-bottom: 2.6cqw; }
+  .tplC h2 em { font-style:normal; color: var(--pink); }
+  .bullets { display:flex; flex-direction:column; gap: 1.9cqw; }
+  .bullets li { list-style:none; display:flex; gap: 1.6cqw; font-size: 2.15cqw; color: #c9d1d9; line-height: 1.45; }
+  .bullets li::before { content:"▸"; color: var(--pink); font-weight: 800; flex:none; }
+  .bullets li > span { flex:1; display:inline; }
+  .callout {
+    margin-top: 2.6cqw; border-left: .45cqw solid var(--pink); background: #f778ba0f;
+    border-radius: .8cqw; padding: 1.4cqw 1.8cqw; font-size: 1.9cqw; color: var(--text);
+  }
+  .callout b { color: var(--pink); }
+
+  /* ===== TEMPLATE D — big stat ===== */
+  .tplD { text-align:center; justify-content:center; align-items:center;
+    background: radial-gradient(ellipse at 50% 60%, #3fb95012, transparent 60%), var(--bg); }
+  .tplD h2 { font-size: 3.4cqw; font-weight: 800; color: var(--muted); margin-bottom: 3cqw; }
+  .statpair { display:flex; gap: 7cqw; align-items: stretch; }
+  .stat { display:flex; flex-direction:column; gap:.6cqw; }
+  .stat .formula { font-size: 2.2cqw; color: var(--muted); }
+  .stat .num { font-size: 10cqw; font-weight: 900; line-height:1; letter-spacing:-.02em; }
+  .num-ok { color: var(--green); text-shadow: 0 0 4cqw #3fb95044; }
+  .num-bad { color: var(--red); text-shadow: 0 0 4cqw #f8514944; }
+  .tplD .d-foot { margin-top: 3.4cqw; font-size: 2.1cqw; color: var(--text); }
+  .tplD .d-foot b { color: var(--red); }
+
+  /* ===== TEMPLATE E — comparison ===== */
+  .tplE h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.6cqw; letter-spacing:-.01em; }
+  .compare { display:grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw; flex:1; min-height:0; }
+  .col { border-radius: 1.4cqw; padding: 2.4cqw 2.6cqw; border: 1px solid; }
+  .col h3 { font-size: 2.1cqw; font-weight: 800; margin-bottom: 1.6cqw; display:flex; align-items:center; gap: 1cqw; }
+  .col-bad { background: #f8514908; border-color: #f8514933; }
+  .col-bad h3 { color: var(--red); }
+  .col-good { background: #3fb95008; border-color: #3fb95044; }
+  .col-good h3 { color: var(--green); }
+  .col .quote { font-size: 2.5cqw; font-family: 'Cascadia Code', Consolas, monospace; color: var(--text); line-height: 1.5; }
+  .col .quote .hl-path { color: var(--blue); } .col .quote .hl-stop { color: var(--green); font-weight: 700; }
+  .col ul { margin-top: 1.6cqw; }
+  .col li { list-style:none; font-size: 1.75cqw; color: var(--muted); padding: .5cqw 0; }
+  .ing { display:flex; gap: .9cqw; margin-top: 2cqw; flex-wrap:wrap; }
+  .ing span { font-size: 1.45cqw; font-weight:700; color: var(--green); border: 1px solid #3fb95044; border-radius: 1.6cqw; padding: .4cqw 1.2cqw; background:#3fb9500a; }
+
+  /* ===== TEMPLATE F — technical / terminal ===== */
+  .tplF h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.4cqw; letter-spacing:-.01em; }
+  .tplF .f-body { display:grid; grid-template-columns: 52% 1fr; gap: 3.2cqw; flex:1; min-height:0; }
+  .term {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 1.2cqw;
+    font-family:'Cascadia Code', Consolas, monospace; font-size: 1.75cqw; padding: 2cqw 2.2cqw;
+    line-height: 1.85; color: #c9d1d9; align-self: start;
+  }
+  .term .t-bar { display:flex; gap:.7cqw; margin-bottom: 1.4cqw; }
+  .term .t-bar i { width:1.1cqw; height:1.1cqw; border-radius:50%; background:#30363d; display:block; }
+  .term .p { color: var(--cyan); }
+  .term .dim { color: #6e7681; }
+  .meter { display:flex; height: 1.5cqw; border-radius: 1cqw; overflow:hidden; margin: .5cqw 0 1cqw; background:#161b22; }
+  .meter i { display:block; height:100%; }
+  .tplF .f-side .bullets li::before { color: var(--cyan); }
+  .habit {
+    margin-top: 2.2cqw; background: #39c5cf10; border: 1px solid #39c5cf44; border-radius: .9cqw;
+    padding: 1.3cqw 1.7cqw; font-size: 1.8cqw;
+  }
+  .habit b { color: var(--cyan); }
+
+  /* ===== TEMPLATE G — table/data ===== */
+  .tplG h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.4cqw; letter-spacing:-.01em; }
+  .dtable { width: 100%; border-collapse: collapse; font-size: 2cqw; }
+  .dtable th { text-align:left; font-size: 1.5cqw; letter-spacing:.15em; text-transform:uppercase; color: var(--muted); padding: 1cqw 1.6cqw; border-bottom: 1px solid var(--border); }
+  .dtable td { padding: 1.5cqw 1.6cqw; border-bottom: 1px solid #21262d; }
+  .dtable td:first-child { font-weight: 700; }
+  .dtable .r-hl td { background: #bc8cff0d; }
+  .dtable .new-chip { font-size: 1.3cqw; font-weight:800; color: var(--bg); background: var(--purple); border-radius: 1.2cqw; padding: .25cqw 1cqw; margin-left: .8cqw; vertical-align: middle; }
+  .dtable .credits { font-family:'Cascadia Code',Consolas,monospace; color: var(--purple); font-weight: 700; }
+  .dtable .sub { color: var(--muted); font-size: 1.6cqw; }
+  .tplG .g-foot { margin-top: 2cqw; font-size: 1.7cqw; color: var(--muted); }
+  .tplG .g-foot b { color: var(--amber); }
+
+  /* ===== TEMPLATE H — quote ===== */
+  .tplH { justify-content:center;
+    background: radial-gradient(ellipse at 25% 25%, #3fb95014, transparent 55%), var(--bg); }
+  .tplH .h-mark { font-size: 12cqw; font-weight: 900; color: #3fb95028; line-height: .6; font-family: Georgia, serif; }
+  .tplH blockquote { font-size: 3.9cqw; font-weight: 700; line-height: 1.35; max-width: 84%; letter-spacing:-.01em; }
+  .tplH blockquote em { font-style: normal; color: var(--green); }
+  .tplH .h-attr { margin-top: 2.6cqw; font-size: 1.9cqw; color: var(--muted); display:flex; align-items:center; gap: 1.4cqw; }
+  .tplH .h-attr i { width: 4cqw; height: 2px; background: var(--green); display:block; }
+  .tplH .h-cap { margin-top: 2.6cqw; display:flex; gap: 1cqw; }
+  .tplH .h-cap span { font-size: 1.55cqw; color: var(--muted); border: 1px solid var(--border); border-radius: 1.8cqw; padding: .5cqw 1.4cqw; background: #ffffff05; }
+
+  /* ===== TEMPLATE I — takeaways ===== */
+  .tplI h2 { font-size: 4cqw; font-weight: 850; margin-bottom: 2.6cqw; letter-spacing:-.01em; }
+  .takes { display:flex; flex-direction:column; gap: 1.5cqw; counter-reset: tk; }
+  .take {
+    display:flex; align-items:center; gap: 2cqw; background: #ffffff05;
+    border: 1px solid var(--border); border-radius: 1.1cqw; padding: 1.45cqw 2cqw;
+  }
+  .take .n { width: 3.4cqw; height: 3.4cqw; flex:none; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-weight: 900; font-size: 1.9cqw; color: var(--bg); }
+  .take .tx { font-size: 2.05cqw; }
+  .take .tx b { display:block; }
+  .take .tx span { color: var(--muted); font-size: 1.7cqw; }
+  .n1{background:var(--green);} .n2{background:var(--blue);} .n3{background:var(--purple);} .n4{background:var(--pink);} .n5{background:var(--cyan);}
+
+  /* anatomy overlay */
+  .anat { position:relative; }
+  .anat .guide { position:absolute; border: 1px dashed #58a6ff66; pointer-events:none; }
+  .anat .g-lbl { position:absolute; font-size: 11px; color: var(--blue); background:#0d1117; padding: 1px 7px; border:1px solid #58a6ff44; border-radius: 8px; }
+
+  /* prompt cards */
+  .pcards { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 800px){ .pcards { grid-template-columns: 1fr; } }
+  .pcard { background: var(--panel); border:1px solid var(--border); border-radius: 12px; padding: 16px 18px; font-size: 13px; }
+  .pcard h4 { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .pcard p { color: var(--muted); font-family:'Cascadia Code',Consolas,monospace; font-size: 12px; line-height: 1.7; }
+  .pcard p b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-head">
+    <h1>Make Every Token Count — Slide Design System</h1>
+    <p>9 templates · GitHub dark-mode tech aesthetic · 16:9 · companion to <code>presentation-plan.md</code></p>
+  </div>
+
+  <!-- ============ TOKENS ============ -->
+  <div class="section">
+    <h2><b>01</b> · Design tokens</h2>
+    <div class="spec-note"><strong>Canvas:</strong> #0d1117 on every slide. <strong>Act accent system:</strong> each act owns ONE accent color used for its kicker, bullet markers, callout borders, image glow, and ribbon — never mix accents within a slide (the only exceptions: the title, takeaways, and closer slides, which use the full 5-color set deliberately). <strong>Semantic colors:</strong> amber = caveat/verify, red = refuted/anti-pattern, green doubles as "good/✓" in comparisons regardless of act.</div>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#0d1117;border-bottom:1px solid #30363d;"></div><div class="lbl"><b>#0d1117</b><span>canvas</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#161b22;"></div><div class="lbl"><b>#161b22</b><span>panel / card</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#010409;"></div><div class="lbl"><b>#010409</b><span>terminal / code</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#30363d;"></div><div class="lbl"><b>#30363d</b><span>borders</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#e6edf3;"></div><div class="lbl"><b>#e6edf3</b><span>primary text</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#8b949e;"></div><div class="lbl"><b>#8b949e</b><span>muted text</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#3fb950;"></div><div class="lbl"><b>#3fb950</b><span>ACT 1 · thesis</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#58a6ff;"></div><div class="lbl"><b>#58a6ff</b><span>ACT 2 · foundations</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#bc8cff;"></div><div class="lbl"><b>#bc8cff</b><span>ACT 3 · billing</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#f778ba;"></div><div class="lbl"><b>#f778ba</b><span>ACT 4 · context eng.</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#39c5cf;"></div><div class="lbl"><b>#39c5cf</b><span>ACT 5 · verify</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#e3b341;"></div><div class="lbl"><b>#e3b341</b><span>caveat / verify-live</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#f85149;"></div><div class="lbl"><b>#f85149</b><span>refuted / anti-pattern</span></div></div>
+    </div>
+  </div>
+
+  <!-- ============ TYPE ============ -->
+  <div class="section">
+    <h2><b>02</b> · Typography</h2>
+    <div class="spec-note"><strong>Faces:</strong> UI sans (Segoe UI / Inter / SF) for everything; <strong>Cascadia Code / Consolas</strong> for commands, prompts, paths, and stats that should feel "terminal". Sizes below are for a 1920×1080 frame — the mockup slides scale them proportionally (cqw units). <strong>Rules:</strong> headlines max 2 lines; one accent word per headline (italic-styled em, colored); body bullets never below 28px; ALL on-slide text lives in the slide layer, never in generated images.</div>
+    <div class="type-scale">
+      <div class="type-row"><div class="t-spec">DISPLAY · 96–120px · 900 · gradient allowed</div><div style="font-size:38px;font-weight:900;">Make Every Token Count</div></div>
+      <div class="type-row"><div class="t-spec">HEADLINE · 64px · 850 · -1% tracking</div><div style="font-size:30px;font-weight:850;">Three phases. Three windows.</div></div>
+      <div class="type-row"><div class="t-spec">KICKER · 24px · 800 · +25% tracking · act color</div><div style="font-size:14px;font-weight:800;letter-spacing:.25em;color:#f778ba;">ACT 4 · CONTEXT ENGINEERING</div></div>
+      <div class="type-row"><div class="t-spec">BODY BULLET · 32px · 400 · #c9d1d9</div><div style="font-size:18px;color:#c9d1d9;">▸ Bloated context is re-sent every single turn</div></div>
+      <div class="type-row"><div class="t-spec">BIG STAT · 150px · 900 · mono ok · glow</div><div class="mono" style="font-size:42px;font-weight:900;color:#3fb950;text-shadow:0 0 18px #3fb95055;">61%</div></div>
+      <div class="type-row"><div class="t-spec">CODE / COMMAND · 28px · Cascadia</div><div class="mono" style="font-size:16px;color:#3fb950;">/clear &nbsp;·&nbsp; #file:src/auth/login.ts</div></div>
+      <div class="type-row"><div class="t-spec">FOOTER · 20px · #6e7681</div><div style="font-size:12px;color:#6e7681;">Make Every Token Count · June 2026 · 27/58</div></div>
+    </div>
+  </div>
+
+  <!-- ============ ANATOMY ============ -->
+  <div class="section">
+    <h2><b>03</b> · Slide anatomy (every slide)</h2>
+    <div class="spec-note"><strong>Constant furniture:</strong> ① 5px act-color ribbon fading across the top · ② kicker (act + subsection) top-left · ③ footer: deck title left, act-dot progress + slide number right · ④ 5% side / 4.2% top-bottom safe margins. The dashed blue guides below are annotations, not part of the design.</div>
+    <div class="slide anat">
+      <div class="ribbon r-pink"></div>
+      <div class="kicker" style="color:var(--pink);"><span class="seg" style="background:var(--pink);"></span>ACT 4 · CONTEXT DISCIPLINE</div>
+      <div style="flex:1; display:flex; align-items:center; justify-content:center; color:#3d444d; font-size:2.4cqw; font-weight:700;">CONTENT REGION</div>
+      <div class="s-footer">
+        <span>Make Every Token Count</span>
+        <span style="display:flex;align-items:center;gap:1.2cqw;"><span class="dots"><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i><i style="background:var(--pink);box-shadow:0 0 6px var(--pink);"></i><i></i></span> 27 / 58</span>
+      </div>
+      <div class="guide" style="inset: 13% 5% 11% 5%;"></div>
+      <div class="g-lbl" style="top:2%; left:34%;">① act ribbon 5px</div>
+      <div class="g-lbl" style="top:11.5%; left:5%;">② kicker</div>
+      <div class="g-lbl" style="bottom:24%; right:7%;">safe content zone</div>
+      <div class="g-lbl" style="bottom:2.5%; left:38%;">③ footer + act-dot progress</div>
+    </div>
+    <div class="tpl-meta"><span>margins <b>5% / 4.2%</b></span><span>ribbon <b>5px</b></span><span>progress dots <b>1 per act, current glows</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE A ============ -->
+  <div class="section">
+    <h2><b>04</b> · Template A — Title <span style="color:#6e7681;font-weight:400;">(slides 1, 58-closer variant)</span></h2>
+    <div class="slide tplA">
+      <div class="t-eyebrow">A developer deep-dive · June 2026</div>
+      <h1>Make Every<br>Token Count</h1>
+      <div class="t-sub">Saving tokens with GitHub Copilot — Chat · Agent mode · <code>CLI</code></div>
+      <div class="agenda">
+        <span class="ag-1">1 · Quality beats cost</span><span class="ag-2">2 · Foundations</span><span class="ag-3">3 · Billing</span><span class="ag-4">4 · Context engineering</span><span class="ag-5">5 · Verify &amp; apply</span>
+      </div>
+      <div class="s-footer"><span>@yourhandle</span><span>billing current as of June 2026 — details may shift</span></div>
+    </div>
+    <div class="tpl-meta"><span>image: <b>full-bleed 16:9 at 20–30% opacity behind text</b></span><span>display type <b>gradient white→green→blue</b></span><span>agenda chips <b>one per act color</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE B ============ -->
+  <div class="section">
+    <h2><b>05</b> · Template B — Act divider <span style="color:#6e7681;font-weight:400;">(optional ×5; act 4 shown)</span></h2>
+    <div class="slide tplB">
+      <div class="ribbon r-pink"></div>
+      <div class="b-act">04</div>
+      <h1>Context <em>Engineering</em></h1>
+      <div class="b-sub">The practical controls — discipline, phases, guardrails, configs, power tips. The heart of the talk: 30 minutes.</div>
+      <div class="b-map"><i></i><i></i><i></i><i class="on"></i><i></i></div>
+      <div class="s-footer"><span>Make Every Token Count</span><span>ACT 4 · 21 slides</span></div>
+    </div>
+    <div class="tpl-meta"><span>ghost numeral <b>~480px at 8% act color</b></span><span>image: <b>full-bleed, right-weighted, 16:9</b></span><span>act map <b>5 bars, current glows</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE C ============ -->
+  <div class="section">
+    <h2><b>06</b> · Template C — Content + side image <span style="color:#6e7681;font-weight:400;">(workhorse — ~20 slides; slide 28 shown)</span></h2>
+    <div class="slide tplC">
+      <div class="ribbon r-pink"></div>
+      <div class="kicker" style="color:var(--pink);"><span class="seg" style="background:var(--pink);"></span>ACT 4 · CONTEXT DISCIPLINE</div>
+      <div class="c-body">
+        <div>
+          <h2>Don't pre-stuff <em>"might need this"</em></h2>
+          <ul class="bullets">
+            <li><span>Scope references: <code>#file:</code> / <code>#symbol</code> — not <code>@workspace</code> by default</span></li>
+            <li><span><code>#codebase</code> runs a broad semantic search — it pulls in more than you wanted</span></li>
+            <li><span>Let the agent <b>discover</b> — it's good at pulling, bad at ignoring</span></li>
+          </ul>
+          <div class="callout"><b>Exception:</b> whole-codebase search IS right for genuine "where is X?" discovery.</div>
+        </div>
+        <div class="img-zone" style="--zone-glow:#f778ba33;"><b>GEMINI IMAGE · 1:1</b><span>robotic hand offers 3 crystal file-shards; wall of dim files behind</span></div>
+      </div>
+      <div class="s-footer"><span>Make Every Token Count</span><span style="display:flex;align-items:center;gap:1.2cqw;"><span class="dots"><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i><i style="background:var(--pink);box-shadow:0 0 6px var(--pink);"></i><i></i></span> 28 / 58</span></div>
+    </div>
+    <div class="tpl-meta"><span>grid <b>62% text / 38% image</b></span><span>max <b>4 bullets</b></span><span>one <b>callout</b> max</span><span>accent word in headline <b>act color</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE D ============ -->
+  <div class="section">
+    <h2><b>07</b> · Template D — Big stat / statement <span style="color:#6e7681;font-weight:400;">(slides 5, 6, 14, 23, 34, 44; slide 6 shown)</span></h2>
+    <div class="slide tplD">
+      <div class="ribbon r-green"></div>
+      <div class="kicker" style="color:var(--green); position:absolute; top:4.2%; left:5%;"><span class="seg" style="background:var(--green);"></span>ACT 1 · THE THESIS</div>
+      <h2>99% per step is not 99%</h2>
+      <div class="statpair">
+        <div class="stat"><div class="formula mono">0.99 ^ 50 steps</div><div class="num num-ok">61%</div></div>
+        <div class="stat"><div class="formula mono">0.95 ^ 50 steps</div><div class="num num-bad">8%</div></div>
+      </div>
+      <div class="d-foot">a 50-step agent run at 95% per-step accuracy <b>almost certainly fails</b></div>
+      <div class="s-footer"><span>Make Every Token Count</span><span style="display:flex;align-items:center;gap:1.2cqw;"><span class="dots"><i style="background:var(--green);box-shadow:0 0 6px var(--green);"></i><i></i><i></i><i></i><i></i></span> 6 / 58</span></div>
+    </div>
+    <div class="tpl-meta"><span>stat <b>≤150px, 900, glow shadow</b></span><span>max <b>2 numbers</b> per slide</span><span>image: <b>none, or faint 16:9 backdrop ≤15% opacity</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE E ============ -->
+  <div class="section">
+    <h2><b>08</b> · Template E — Comparison ❌/✅ <span style="color:#6e7681;font-weight:400;">(slides 4, 8, 17, 20, 24, 27, 29, 56; slide 29 shown)</span></h2>
+    <div class="slide tplE">
+      <div class="ribbon r-pink"></div>
+      <div class="kicker" style="color:var(--pink);"><span class="seg" style="background:var(--pink);"></span>ACT 4 · CONTEXT DISCIPLINE</div>
+      <h2>Precise beats short — don't diet the prompt</h2>
+      <div class="compare">
+        <div class="col col-bad">
+          <h3>✗ The gamble</h3>
+          <div class="quote">"Fix the bug."</div>
+          <ul><li>which bug?</li><li>where does it stop?</li><li>agent guesses → wrong-direction run → full retry</li></ul>
+        </div>
+        <div class="col col-good">
+          <h3>✓ The brief</h3>
+          <div class="quote">"Issue #45: XY happens when Z.<br>Handler: <span class="hl-path">src/payments/retry.ts</span>.<br>Fix it; <span class="hl-stop">stop when tests pass</span>."</div>
+          <div class="ing"><span>exact problem</span><span>known paths</span><span>stop condition</span></div>
+        </div>
+      </div>
+      <div class="s-footer"><span>Make Every Token Count</span><span style="display:flex;align-items:center;gap:1.2cqw;"><span class="dots"><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i><i style="background:var(--pink);box-shadow:0 0 6px var(--pink);"></i><i></i></span> 29 / 58</span></div>
+    </div>
+    <div class="tpl-meta"><span>bad column <b>red 8% tint</b> · good <b>green 8% tint</b></span><span>green/red here are <b>semantic — used in every act</b></span><span>prompt text in <b>mono</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE F ============ -->
+  <div class="section">
+    <h2><b>09</b> · Template F — Technical / terminal <span style="color:#6e7681;font-weight:400;">(slides 15, 16, 26, 30, 37, 40, 43, 46, 48, 50; slide 48 shown)</span></h2>
+    <div class="slide tplF">
+      <div class="ribbon r-cyan"></div>
+      <div class="kicker" style="color:var(--cyan);"><span class="seg" style="background:var(--cyan);"></span>ACT 5 · VERIFICATION TOOLKIT</div>
+      <h2>You can't manage what you can't see</h2>
+      <div class="f-body">
+        <div class="term">
+          <div class="t-bar"><i></i><i></i><i></i></div>
+          <div><span class="p">❯</span> /context</div>
+          <div class="dim">— context window · gpt-5.4 · 128K —</div>
+          <div>System &amp; tools <span class="dim">· 18%</span></div>
+          <div class="meter"><i style="width:18%;background:var(--purple);"></i></div>
+          <div>Messages <span class="dim">· 31%</span></div>
+          <div class="meter"><i style="width:31%;background:var(--cyan);"></i></div>
+          <div>Free space <span class="dim">· 46%</span> <span style="color:var(--green);">· Buffer 5%</span></div>
+          <div class="meter"><i style="width:46%;background:#1f6feb44;"></i></div>
+        </div>
+        <div class="f-side">
+          <ul class="bullets">
+            <li><span>Exactly what's eating the window — overhead vs history</span></li>
+            <li><span>Watch <b>System &amp; tools</b> jump when an MCP turns on</span></li>
+            <li><span><code>/compact</code> reclaims — with slide-30 caveats</span></li>
+          </ul>
+          <div class="habit"><b>Habit:</b> first sign of drift → <code>/context</code>. Past 60%? You know what to do.</div>
+        </div>
+      </div>
+      <div class="s-footer"><span>Make Every Token Count</span><span style="display:flex;align-items:center;gap:1.2cqw;"><span class="dots"><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple)"></i><i style="background:var(--pink)"></i><i style="background:var(--cyan);box-shadow:0 0 6px var(--cyan);"></i></span> 48 / 58</span></div>
+    </div>
+    <div class="tpl-meta"><span>terminal panel <b>#010409, stylized — never a raw screenshot</b></span><span>grid <b>52% terminal / 48% bullets</b></span><span>habit chip <b>act color, bottom-right</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE G ============ -->
+  <div class="section">
+    <h2><b>10</b> · Template G — Table / data <span style="color:#6e7681;font-weight:400;">(slides 12, 13, 18, 21, 22, 31, 33, 41, 42, 51, 53, 57; slide 22 shown)</span></h2>
+    <div class="slide tplG">
+      <div class="ribbon r-purple"></div>
+      <div class="kicker" style="color:var(--purple);"><span class="seg" style="background:var(--purple);"></span>ACT 3 · THE BILLING MODEL <span class="badge" style="background:var(--green);">VERIFIED LIVE · JUN 9</span></div>
+      <h2>What your plan actually includes</h2>
+      <table class="dtable">
+        <tr><th>Plan</th><th>Monthly AI credits</th><th>Breakdown</th></tr>
+        <tr><td>Pro</td><td class="credits">1,500</td><td class="sub">1,000 base + 500 flex</td></tr>
+        <tr><td>Pro+</td><td class="credits">7,000</td><td class="sub">3,900 base + 3,100 flex</td></tr>
+        <tr class="r-hl"><td>Max <span class="new-chip">NEW TIER</span></td><td class="credits">20,000</td><td class="sub">10,000 base + 10,000 flex</td></tr>
+        <tr><td>Business / Enterprise</td><td class="credits">$19 / $39</td><td class="sub">included credits per user</td></tr>
+      </table>
+      <div class="g-foot">1 credit = $0.01 · out of credits → <b>set a paid budget, or wait for reset</b> · Free plan: completions only</div>
+      <div class="s-footer"><span>Make Every Token Count</span><span style="display:flex;align-items:center;gap:1.2cqw;"><span class="dots"><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--purple);box-shadow:0 0 6px var(--purple);"></i><i></i><i></i></span> 22 / 58</span></div>
+    </div>
+    <div class="tpl-meta"><span>max <b>5 rows × 3 cols</b></span><span>numbers in <b>mono, act color</b></span><span>highlight row <b>act tint 5%</b></span><span>status badges <b>green=verified · amber=caveat</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE H ============ -->
+  <div class="section">
+    <h2><b>11</b> · Template H — Quote / story <span style="color:#6e7681;font-weight:400;">(slides 3, 11, 24, 39; slide 3 shown)</span></h2>
+    <div class="slide tplH">
+      <div class="ribbon r-green"></div>
+      <div class="h-mark">"</div>
+      <blockquote>If rockets were cheap, NASA could just send <em>20 rockets roughly in the direction of the moon</em>. If one of them landed — perfect. If none landed, you just send off the next 20.</blockquote>
+      <div class="h-attr"><i></i>Todd Toler · Microsoft Reactor — "GitHub Copilot: Token Optimization"</div>
+      <div class="h-cap"><span>little context</span><span>lazy prompt</span><span>retry on fail</span></div>
+      <div class="s-footer"><span>Make Every Token Count</span><span style="display:flex;align-items:center;gap:1.2cqw;"><span class="dots"><i style="background:var(--green);box-shadow:0 0 6px var(--green);"></i><i></i><i></i><i></i><i></i></span> 3 / 58</span></div>
+    </div>
+    <div class="tpl-meta"><span>image: <b>full-bleed 16:9 at ≤25% opacity, right-weighted</b></span><span>quote <b>≤30 words on slide</b> — tell the rest aloud</span><span>accent phrase <b>act color</b></span></div>
+  </div>
+
+  <!-- ============ TEMPLATE I ============ -->
+  <div class="section">
+    <h2><b>12</b> · Template I — Takeaways <span style="color:#6e7681;font-weight:400;">(slides 52, 55; slide 52 shown)</span></h2>
+    <div class="slide tplI">
+      <div class="ribbon" style="background:linear-gradient(90deg,var(--green),var(--blue),var(--purple),var(--pink),var(--cyan));"></div>
+      <div class="kicker" style="color:var(--cyan);"><span class="seg" style="background:var(--cyan);"></span>ACT 5 · THE TAKEAWAYS</div>
+      <h2>If you remember five things</h2>
+      <div class="takes">
+        <div class="take"><div class="n n1">1</div><div class="tx"><b>Right-size the model</b><span>plan on reasoning · implement on light — the ~50× lever</span></div></div>
+        <div class="take"><div class="n n2">2</div><div class="tx"><b>Precise prompts</b><span>exact problem · known paths · stop condition</span></div></div>
+        <div class="take"><div class="n n3">3</div><div class="tx"><b>Split the task</b><span>research → plan → implement, fresh window each</span></div></div>
+        <div class="take"><div class="n n4">4</div><div class="tx"><b>Deterministic guardrails</b><span>tests &amp; linters reset the compounding error</span></div></div>
+        <div class="take"><div class="n n5">5</div><div class="tx"><b>Tiny, hand-written instructions</b><span>always-on means always-billed</span></div></div>
+      </div>
+      <div class="s-footer"><span>Make Every Token Count</span><span>52 / 58</span></div>
+    </div>
+    <div class="tpl-meta"><span>numbered chips <b>one per act color — the agenda paid off</b></span><span>ribbon <b>full 5-color gradient (this template only)</b></span></div>
+  </div>
+
+  <!-- ============ IMAGE PROMPT SYSTEM ============ -->
+  <div class="section">
+    <h2><b>13</b> · Gemini image system</h2>
+    <div class="spec-note">
+      <strong>The one prefix, every prompt:</strong><br>
+      <span class="mono" style="color:#c9d1d9; display:block; margin-top:8px; line-height:1.7;">"Dark futuristic 3D isometric illustration, near-black background (#0d1117), subtle volumetric fog, glossy dark surfaces, clean minimal composition with generous empty space, glowing neon accent lighting in <b style="color:#e3b341;">{ACT_COLOR}</b>, cinematic rim light, high detail, professional tech-conference aesthetic, absolutely no text, no words, no letters, no numbers, no logos."</span><br>
+      <strong>{ACT_COLOR}:</strong> emerald green · electric blue · violet purple · hot pink · cyan. Generate in per-act batches for consistency. 2–3 candidates per prompt; pick the emptiest composition. Full-bleed slides 16:9 · side-zone slides 1:1.
+    </div>
+    <div class="pcards">
+      <div class="pcard"><h4 style="color:var(--green);">ACT 1 · sample — slide 3 (16:9)</h4><p>PREFIX + <b>A swarm of twenty small chaotic rockets veering in scattered directions across a dark starfield, most tumbling off course with sputtering trails, a distant glowing moon untouched, one sleek confident rocket on a clean precise green-lit trajectory.</b></p></div>
+      <div class="pcard"><h4 style="color:var(--blue);">ACT 2 · sample — slide 9 (1:1)</h4><p>PREFIX + <b>A pristine glass machine box on a dark pedestal, a ribbon of luminous blue glyph-like shapes flowing in one side and a different ribbon flowing out the other, the interior showing only elegant clockwork probability gears, no storage, no memory banks.</b></p></div>
+      <div class="pcard"><h4 style="color:var(--purple);">ACT 3 · sample — slide 17 (16:9)</h4><p>PREFIX + <b>A dark exchange counter where chunky old arcade tokens on the left are being melted by violet light into a fine stream of thousands of micro-coins flowing to the right, a holographic balance scale above tipping toward the fine stream.</b></p></div>
+      <div class="pcard"><h4 style="color:var(--pink);">ACT 4 · sample — slide 43 (1:1)</h4><p>PREFIX + <b>A massive torrent of raw grey data plunging through an elegant small pink mechanical sieve mid-air, only a thin refined luminous stream continuing down into a sleek waiting neural core, the discarded bulk dispersing as harmless dark mist.</b></p></div>
+      <div class="pcard"><h4 style="color:var(--cyan);">ACT 5 · sample — slide 49 (1:1)</h4><p>PREFIX + <b>A beautiful circular cyan progress ring floating as a holographic instrument above a dark IDE-like workspace, the ring two-thirds filled with the leading edge glowing amber, small orbiting satellite chips feeding the ring.</b></p></div>
+      <div class="pcard"><h4 style="color:var(--amber);">RESCUE SUFFIXES</h4><p>too busy → <b>", minimalist, single focal subject"</b> · too dim → <b>", brighter accent glow, higher contrast"</b> · fights headline → <b>", darker, more negative space in upper left"</b></p></div>
+    </div>
+  </div>
+
+  <div class="section" style="text-align:center; color:#6e7681; font-size:13px;">
+    Full per-slide prompts, content, speaker notes &amp; research backing: <code>presentation-plan.md</code> · 58 slides · ~90 min
+  </div>
+
+</div>
+</body>
+</html>
