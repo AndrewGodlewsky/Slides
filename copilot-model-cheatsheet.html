@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copilot Model Cheat Sheet · Task × Surface → Model — Make Every Token Count</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #010409; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e;
+    --green: #3fb950; --blue: #58a6ff; --purple: #bc8cff; --pink: #f778ba; --cyan: #39c5cf;
+    --amber: #e3b341; --red: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+    background: #000; color: var(--text); line-height: 1.5; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  code, .mono { font-family: 'Cascadia Code', 'SFMono-Regular', ui-monospace, Consolas, monospace; }
+
+  #stage { width: min(100vw, 177.78vh); aspect-ratio: 16 / 9; position: relative; }
+  .slide {
+    position: absolute; inset: 0; background: var(--bg); overflow: hidden;
+    padding: 3.4% 4.2%; display: flex; flex-direction: column;
+    container-type: inline-size;
+  }
+  .ribbon { position:absolute; top:0; left:0; right:0; height: 5px; z-index:3;
+    background: linear-gradient(90deg, var(--green), var(--blue) 35%, var(--purple) 70%, transparent); }
+
+  .kicker {
+    font-size: 1.45cqw; font-weight: 800; letter-spacing: .25em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 1.1cqw; color: var(--green); margin-bottom: .9cqw;
+  }
+  .kicker .seg { width: 3.2cqw; height: 2px; background: var(--green); }
+  .kicker .date { color: var(--muted); letter-spacing: .12em; font-weight: 700; margin-left: auto; }
+
+  h1 { font-size: 3.6cqw; font-weight: 900; letter-spacing: -.015em; line-height: 1.05; margin-bottom: 1.4cqw; }
+  h1 em { font-style: normal;
+    background: linear-gradient(95deg, #fff 20%, var(--green) 60%, var(--blue));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* surface card grid */
+  .grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr 1fr; gap: 1.1cqw; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 1cqw;
+    padding: .9cqw 1.1cqw; display: flex; flex-direction: column; gap: .42cqw; min-height: 0;
+  }
+  .card h2 {
+    font-size: 1.5cqw; font-weight: 850; letter-spacing: .05em; text-transform: uppercase;
+    display: flex; align-items: center; gap: .7cqw; padding-bottom: .5cqw;
+    border-bottom: 1px solid var(--border);
+  }
+  .card h2 .tag { margin-left: auto; font-size: .95cqw; font-weight: 700; color: var(--muted);
+    letter-spacing: .02em; text-transform: none; }
+  .c-green h2 { color: var(--green); } .c-blue h2 { color: var(--blue); }
+  .c-purple h2 { color: var(--purple); } .c-cyan h2 { color: var(--cyan); }
+  .c-amber h2 { color: var(--amber); } .c-pink h2 { color: var(--pink); }
+
+  .row { display: flex; align-items: baseline; gap: .8cqw; font-size: 1.12cqw; line-height: 1.3; }
+  .row .task { color: var(--muted); flex: 1; }
+  .row .pick { font-weight: 800; white-space: nowrap; }
+  .c-green .pick { color: var(--green); } .c-blue .pick { color: var(--blue); }
+  .c-purple .pick { color: var(--purple); } .c-cyan .pick { color: var(--cyan); }
+  .c-amber .pick { color: var(--amber); } .c-pink .pick { color: var(--pink); }
+  .row .fb { color: #6e7681; font-size: .92em; white-space: nowrap; }
+  .row .pv { color: var(--amber); font-size: .85em; }
+  .note { font-size: .95cqw; color: #6e7681; font-style: italic; margin-top: auto; line-height: 1.35; }
+  .note b { color: var(--muted); font-style: normal; }
+
+  /* bottom strip: rules + cost ladder */
+  .strip { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 1.1cqw; margin-top: 1.1cqw; }
+  .rule {
+    border-left: .4cqw solid var(--green); background: #3fb9500f; border-radius: .7cqw;
+    padding: .8cqw 1.1cqw; font-size: 1.18cqw; line-height: 1.4; color: var(--text);
+  }
+  .rule b { color: var(--green); }
+  .rule.r2 { border-color: var(--blue); background: #58a6ff0f; } .rule.r2 b { color: var(--blue); }
+  .ladder {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: .7cqw;
+    padding: .7cqw 1.1cqw; display: flex; flex-direction: column; justify-content: center; gap: .3cqw;
+  }
+  .ladder .lbl { font-size: .95cqw; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .ladder .scale { display: flex; align-items: baseline; gap: .35cqw; font-size: 1.12cqw; font-weight: 700; }
+  .ladder .scale i { font-style: normal; color: #6e7681; font-weight: 400; }
+  .lp1 { color: var(--green); } .lp2 { color: var(--cyan); } .lp3 { color: var(--blue); }
+  .lp4 { color: var(--purple); } .lp5 { color: var(--pink); } .lp6 { color: var(--red); }
+
+  .s-footer {
+    margin-top: 1cqw; display: flex; justify-content: space-between; align-items: center;
+    font-size: 1.2cqw; color: #6e7681;
+  }
+  .s-footer .right { display: flex; align-items: center; gap: 1.2cqw; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <section class="slide" style="display:flex">
+    <div class="ribbon"></div>
+
+    <div class="kicker"><span class="seg"></span> Copilot model picker — cheat sheet
+      <span class="date">21 models · usage-based billing · June 10, 2026</span></div>
+    <h1>Task × surface → <em>model</em> <span style="font-size:.45em; color:var(--muted); font-weight:700;">(fallback)</span></h1>
+
+    <div class="grid">
+
+      <div class="card c-green">
+        <h2>⌨ Inline completions <span class="tag">free · no credits</span></h2>
+        <div class="row"><span class="task">Everything (ghost text, NES)</span><span class="pick">Custom FIM model</span></div>
+        <div class="row"><span class="task">If offered in picker</span><span class="pick">Raptor mini <span class="pv">⚠ preview</span></span></div>
+        <div class="note"><b>Never consumes credits</b> on paid plans — lean on it for mechanical typing.</div>
+      </div>
+
+      <div class="card c-blue">
+        <h2>💬 IDE Chat · Ask / Edit</h2>
+        <div class="row"><span class="task">Quick Q&A, explain error</span><span class="pick">GPT-5 mini</span><span class="fb">(Raptor mini)</span></div>
+        <div class="row"><span class="task">Docs, commits, comments</span><span class="pick">Haiku 4.5</span><span class="fb">(GPT-5 mini)</span></div>
+        <div class="row"><span class="task">Edit from clear spec</span><span class="pick">GPT-5.3-Codex</span><span class="fb">(GPT-5.4 mini)</span></div>
+        <div class="row"><span class="task">Vague "clean this up"</span><span class="pick">Sonnet 4.6</span><span class="fb">(GPT-5.4)</span></div>
+        <div class="row"><span class="task">Hard conceptual debugging</span><span class="pick">Opus 4.8</span><span class="fb">(GPT-5.5)</span></div>
+        <div class="note">No GPT-5.4 nano on any chat surface. <b>Auto</b> is task-aware since May 20.</div>
+      </div>
+
+      <div class="card c-purple">
+        <h2>🤖 Agent mode (IDE)</h2>
+        <div class="row"><span class="task">Implement from spec</span><span class="pick">GPT-5.3-Codex</span><span class="fb">(GPT-5.4 mini)</span></div>
+        <div class="row"><span class="task">Multi-file refactor</span><span class="pick">Sonnet 4.6</span><span class="fb">(GPT-5.4)</span></div>
+        <div class="row"><span class="task">Whole-repo analysis</span><span class="pick">Sonnet 4.6 @ 1M</span><span class="fb">(GPT-5.4 @ 1M)</span></div>
+        <div class="row"><span class="task">Long-horizon, retries $$</span><span class="pick">Fable 5</span><span class="fb">(Opus 4.8)</span></div>
+        <div class="note">1M ctx + reasoning dial: VS Code & CLI only. Fable 5 is plan-gated + admin opt-in.</div>
+      </div>
+
+      <div class="card c-cyan">
+        <h2>🖥 Copilot CLI</h2>
+        <div class="row"><span class="task">Terminal / infra automation</span><span class="pick">GPT-5.5</span><span class="fb">(GPT-5.3-Codex)</span></div>
+        <div class="row"><span class="task">Everyday CLI session</span><span class="pick">GPT-5.3-Codex</span><span class="fb">(Haiku 4.5)</span></div>
+        <div class="row"><span class="task">Quick shell one-liners</span><span class="pick">GPT-5 mini</span><span class="fb">(Haiku 4.5)</span></div>
+        <div class="note">Switch with <b>/model</b>. Raptor mini is <b>not</b> available in CLI.</div>
+      </div>
+
+      <div class="card c-amber">
+        <h2>☁ Cloud agent <span class="tag">credits + Actions min.</span></h2>
+        <div class="row"><span class="task">Straightforward issue</span><span class="pick">Haiku 4.5</span><span class="fb">(GPT-5.4 mini)</span></div>
+        <div class="row"><span class="task">Standard delegated task</span><span class="pick">Sonnet 4.6</span><span class="fb">(GPT-5.3-Codex)</span></div>
+        <div class="row"><span class="task">Hard / critical task</span><span class="pick">Fable 5</span><span class="fb">(Opus 4.8)</span></div>
+        <div class="note">Auto pool: Codex · GPT-5.4 · Sonnet 4.6, + cheap pair for simple tasks.</div>
+      </div>
+
+      <div class="card c-pink">
+        <h2>🔍 Code review <span class="tag">no model choice</span></h2>
+        <div class="row"><span class="task">Docs, small repos</span><span class="pick">Low tier</span></div>
+        <div class="row"><span class="task">Security / cross-service</span><span class="pick">Medium tier <span class="pv">⚠ preview</span></span></div>
+        <div class="row"><span class="task">Want a *chosen* reviewer</span><span class="pick">IDE: Codex / Opus 4.8</span></div>
+        <div class="note">Model is auto-selected & undisclosed; admins set tier <b>per repo</b>. Bills credits + Actions minutes.</div>
+      </div>
+
+    </div>
+
+    <div class="strip">
+      <div class="rule"><b>Plan powerful, execute cheap.</b> 50× input-price spread ($0.20 → $10/M) — a Fable/Opus plan feeding Codex/Haiku executors is the biggest lever.</div>
+      <div class="rule r2"><b>Escalate on failure, not size.</b> Cheap model wrong twice → jump two tiers. Cached input ≈ 10× cheaper; surcharge cliffs: Gemini 3.1 Pro 200K, GPT-5.4/5.5 272K.</div>
+      <div class="ladder">
+        <span class="lbl">Cost ladder · input $/M</span>
+        <span class="scale">
+          <span class="lp1">nano·5 mini·Raptor .2–.25</span><i>→</i>
+          <span class="lp2">5.4 mini·MAI .75</span><i>→</i>
+          <span class="lp3">Haiku·Codex 1–1.75</span><i>→</i>
+          <span class="lp4">5.4·Sonnet 2.5–3</span><i>→</i>
+          <span class="lp5">Opus·5.5 5</span><i>→</i>
+          <span class="lp6">Fable 10</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="s-footer">
+      <span>Make Every Token Count · companion to <span class="mono">copilot-model-selection-guide.md</span></span>
+      <span class="right">sources: docs.github.com (fetched live June 10, 2026) · ⚠ = public preview</span>
+    </div>
+  </section>
+</div>
+</body>
+</html>
