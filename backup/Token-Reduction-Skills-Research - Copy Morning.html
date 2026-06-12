@@ -80,7 +80,7 @@
   .p-in{background:rgba(124,156,255,.14);color:var(--input)}
   .p-out{background:rgba(255,159,110,.14);color:var(--output)}
   .p-ctx{background:rgba(192,139,255,.14);color:var(--context)}
-  .ok{color:var(--accent2);font-weight:700} .no{color:#c0392b;font-weight:700}
+  .ok{color:var(--accent2);font-weight:700} .no{color:var(--muted)}
   ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:0}
   ol.steps li{counter-increment:s;position:relative;padding:12px 0 12px 46px;border-bottom:1px solid var(--border)}
   ol.steps li:last-child{border-bottom:none}
@@ -141,25 +141,27 @@
   <div class="card input">
     <div class="tag"></div>
     <div class="cat">Input tokens</div>
-    <div class="pick"><a href="https://github.com/mufeedvh/code2prompt" target="_blank">mufeedvh / code2prompt</a></div>
-    <div class="stars">&#9733; 7,378 &middot; Rust &middot; offline CLI</div>
-    <p>CLI that turns a codebase into a <strong>single prompt</strong> with a source tree, per-pack token count,
-       and glob filtering — so you send only the files that matter instead of letting the model
-       see everything.</p>
-    <div class="copilot-flag yes">&#10003; Run it locally and paste the packed output into Copilot Chat.</div>
-    <div class="save">Glob-filtered packs send <b>only the files that matter</b> — with a token count up front, so you see the input cost <b>before</b> you paste.</div>
+    <div class="pick"><a href="https://github.com/microsoft/LLMLingua" target="_blank">microsoft / LLMLingua</a></div>
+    <div class="stars">&#9733; 6,234 &middot; Python &middot; Microsoft Research</div>
+    <p>Prompt-compression engine. A small model strips non-essential tokens from a prompt before it's sent —
+       <strong>up to 20&times; compression</strong> with minimal quality loss. Best for long, repetitive context
+       (docs, transcripts, RAG chunks) you feed to an LLM.</p>
+    <div class="copilot-flag indirect">&#9888; Technique for your own API apps — not inside Copilot Chat. For Copilot, apply the <em>principle</em> via content exclusion + repomix&nbsp;<code>--compress</code>.</div>
+    <div class="save">Reported real-world: one team cut <b>$42K&rarr;$2.1K/mo</b>. A 2,400-token prompt &rarr; 115 tokens at 20&times;.</div>
   </div>
 
   <div class="card output">
     <div class="tag"></div>
     <div class="cat">Output tokens</div>
-    <div class="pick"><a href="https://github.com/JuliusBrussee/caveman" target="_blank">JuliusBrussee / caveman</a></div>
-    <div class="stars">&#9733; 71,764 &middot; JS hooks + Markdown skills + Python</div>
-    <p>Drop-in skill that forces <strong>terse, filler-free responses</strong> — strips pleasantries, restatements,
-       and step-by-step narration. Eliminates the verbose tokens that cost 5&times; the most.
-       <em>Caveat:</em> affects only output tokens.</p>
-    <div class="copilot-flag yes">&#10003; Installs as a plugin for Copilot, Claude Code, Codex and Gemini.</div>
-    <div class="save">Reported: <b>~65%</b> output reduction (peaks ~87%) — <b>~30–50%</b> off the real-world bill.</div>
+    <div class="pick"><a href="https://github.com/567-labs/instructor" target="_blank">567-labs / instructor</a></div>
+    <div class="stars">&#9733; 13,077 &middot; Python (+ TS/Go/Rust)</div>
+    <p>Forces the model to emit <strong>structured output</strong> (typed JSON / schema) instead of rambling prose.
+       No preamble, no "Sure! Here's…", no trailing explanation — just the data. Eliminates the verbose tokens that
+       cost 5&times; the most. Alternatives: <a href="https://github.com/dottxt-ai/outlines" target="_blank">outlines</a>,
+       <a href="https://github.com/guidance-ai/guidance" target="_blank">guidance</a>,
+       <a href="https://github.com/BoundaryML/baml" target="_blank">BAML</a>.</p>
+    <div class="copilot-flag indirect">&#9888; For your own apps. In Copilot, get the same effect with <em>terse custom instructions</em> (see checklist &rarr;).</div>
+    <div class="save">Schema-constrained replies typically cut output <b>40–70%</b> on code/extraction tasks.</div>
   </div>
 
   <div class="card context">
@@ -176,6 +178,14 @@
 
 </div>
 
+<div class="callout">
+  <strong>The honest catch:</strong> the library picks above are for building <em>your own</em>
+  LLM applications via API. Inside the GitHub Copilot product you can't drop in LLMLingua or Instructor — but the
+  <em>same three principles</em> (compress input, constrain output, cache/trim context) all have direct Copilot
+  equivalents. The tools that <strong>do</strong> plug straight into Copilot are the <strong>context-packers</strong>
+  (repomix, gitingest) and Copilot's own settings — covered next.
+</div>
+
 <h2><span class="num">A</span>Tools you CAN use with GitHub Copilot directly</h2>
 <p class="lead">These are usable today: pack your repo with one of these and paste the compressed result into Copilot Chat
   (or run repomix as an MCP server), instead of letting Copilot index your whole workspace.</p>
@@ -184,46 +194,16 @@
   <thead><tr><th>Tool</th><th>Stars</th><th>Category</th><th>What it does for tokens</th><th>Copilot-ready</th></tr></thead>
   <tbody>
     <tr>
-      <td><a href="https://github.com/microsoft/markitdown" target="_blank">microsoft/markitdown</a></td>
-      <td>151,737</td><td><span class="pill p-in">Input</span></td>
-      <td>Converts <code>.docx/.pdf/.pptx/.xlsx</code> and HTML into clean Markdown — strips the token-dense formatting junk before documents reach the model. Run it on files first, then paste the Markdown into Copilot Chat.</td>
-      <td class="ok">&#10003; Yes</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/JuliusBrussee/caveman" target="_blank">JuliusBrussee/caveman</a></td>
-      <td>71,764</td><td><span class="pill p-out">Output</span></td>
-      <td>Drop-in skill that forces terse, filler-free responses — strips pleasantries, restatements, and step-by-step narration. ~65% output reduction (peaks ~87%); <strong>~30–50%</strong> real-world bill. <em>Caveat:</em> affects only output tokens.</td>
-      <td class="ok">&#10003; Yes</td>
-    </tr>
-    <tr>
       <td><a href="https://github.com/yamadashy/repomix" target="_blank">yamadashy/repomix</a></td>
       <td>25,837</td><td><span class="pill p-ctx">Context</span></td>
       <td>Packs a repo into one AI-friendly file; <code>--compress</code> uses Tree-sitter to keep structure while cutting <strong>~70%</strong> of tokens. Reports per-file token counts. Also an MCP server.</td>
       <td class="ok">&#10003; Yes</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/guidance-ai/guidance" target="_blank">guidance-ai/guidance</a></td>
-      <td>21,497</td><td><span class="pill p-out">Output</span></td>
-      <td>Constrained-generation framework — templates interleave control flow with generation so the model emits only the tokens you ask for. For your own API apps; not pluggable into Copilot.</td>
-      <td class="no">&#10007; No</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/dottxt-ai/outlines" target="_blank">dottxt-ai/outlines</a></td>
-      <td>13,952</td><td><span class="pill p-out">Output</span></td>
-      <td>Local structured generation — constrains output to a JSON schema or regex, eliminating prose padding entirely. For your own API apps; not pluggable into Copilot.</td>
-      <td class="no">&#10007; No</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/567-labs/instructor" target="_blank">567-labs/instructor</a></td>
-      <td>13,077</td><td><span class="pill p-out">Output</span></td>
-      <td>Forces <strong>structured output</strong> (typed JSON / schema) instead of prose — no preamble, no trailing explanation. Cuts the 5&times;-priced output tokens <strong>40–70%</strong>. For your own API apps; in Copilot, get the same effect with terse custom instructions.</td>
-      <td class="no">&#10007; No</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/BoundaryML/baml" target="_blank">BoundaryML/baml</a></td>
-      <td>8,354</td><td><span class="pill p-out">Output</span></td>
-      <td>Schema-first DSL for typed LLM functions — compact structured replies instead of rambling prose. For your own API apps; not pluggable into Copilot.</td>
-      <td class="no">&#10007; No</td>
+      <td><a href="https://github.com/coderamp-labs/gitingest" target="_blank">coderamp-labs/gitingest</a></td>
+      <td>14,806</td><td><span class="pill p-in">Input</span></td>
+      <td>Swap <code>hub</code>&rarr;<code>ingest</code> in any GitHub URL to get a prompt-friendly digest of a codebase. Trim to only the files you need before pasting.</td>
+      <td class="ok">&#10003; Yes</td>
     </tr>
     <tr>
       <td><a href="https://github.com/mufeedvh/code2prompt" target="_blank">mufeedvh/code2prompt</a></td>
@@ -232,22 +212,34 @@
       <td class="ok">&#10003; Yes</td>
     </tr>
     <tr>
-      <td><a href="https://github.com/microsoft/LLMLingua" target="_blank">microsoft/LLMLingua</a></td>
-      <td>6,234</td><td><span class="pill p-in">Input</span></td>
-      <td>Prompt-compression engine — a small model strips non-essential tokens before sending, <strong>up to 20&times;</strong> compression with minimal quality loss. For your own API apps; in Copilot, apply the principle via repomix <code>--compress</code> + Content Exclusion.</td>
-      <td class="no">&#10007; No</td>
-    </tr>
-    <tr>
       <td><a href="https://github.com/simonw/files-to-prompt" target="_blank">simonw/files-to-prompt</a></td>
       <td>2,743</td><td><span class="pill p-in">Input</span></td>
       <td>Concatenate selected files into one clean prompt — lightweight way to hand-pick minimal context.</td>
       <td class="ok">&#10003; Yes</td>
     </tr>
+  </tbody>
+</table>
+</section>
+
+<h2><span class="num">B</span>Bottom line — one pick per category</h2>
+<section class="block">
+<table>
+  <thead><tr><th>Category</th><th>Best general tool</th><th>What to actually do in Copilot</th></tr></thead>
+  <tbody>
     <tr>
-      <td><a href="https://github.com/olivomarco/github-copilot-token-optimization" target="_blank">olivomarco/copilot-token-optimization</a></td>
-      <td>44</td><td><span class="pill p-in">Input</span> <span class="pill p-out">Output</span> <span class="pill p-ctx">Context</span></td>
-      <td>The dedicated Copilot token-optimization guide — source of the settings checklist below — plus bundled agent skills. Covers habits across all three token categories.</td>
-      <td class="ok">&#10003; Yes</td>
+      <td><span class="pill p-in">Input</span></td>
+      <td><a href="https://github.com/microsoft/LLMLingua" target="_blank">LLMLingua</a> (compress prompts)</td>
+      <td>Pack context with <a href="https://github.com/yamadashy/repomix" target="_blank">repomix&nbsp;<code>--compress</code></a> + Content Exclusion + prune MCP servers.</td>
+    </tr>
+    <tr>
+      <td><span class="pill p-out">Output</span></td>
+      <td><a href="https://github.com/567-labs/instructor" target="_blank">Instructor</a> (structured output)</td>
+      <td>Add <code>"Code only, no explanation"</code> to <code>copilot-instructions.md</code>; use Haiku/Auto + medium reasoning.</td>
+    </tr>
+    <tr>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td><em>Copilot's built-in prefix caching</em> (no extra tool)</td>
+      <td>Shrink always-on instruction files, start fresh sessions, keep prefixes stable for Copilot's built-in caching.</td>
     </tr>
   </tbody>
 </table>
@@ -257,45 +249,6 @@
   3,900 monthly credits go further.
 </div>
 </section>
-
-<h2><span class="num">B</span>Memory skills</h2>
-<section class="block" style="padding:10px 18px">
-<table>
-  <thead><tr><th>Skill / system</th><th>Category</th><th>What it does &amp; why it saves</th><th>Reported savings</th></tr></thead>
-  <tbody>
-    <tr>
-      <td><a href="https://github.com/JuliusBrussee/caveman" target="_blank">caveman-compress</a></td>
-      <td><span class="pill p-ctx">Context</span></td>
-      <td>Companion skill that rewrites <code>CLAUDE.md</code> / project notes into a denser form. Memory files reload <em>every</em> session, so one compression saves input tokens permanently.</td>
-      <td>~46% smaller memory files</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/mem0ai/mem0" target="_blank">Mem0</a></td>
-      <td><span class="pill p-ctx">Context</span></td>
-      <td>Fact extraction → vector store. Retrieves stored facts instead of replaying the whole conversation each call.</td>
-      <td>~90% fewer tokens, 91% lower latency</td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/MemoriLabs/Memori" target="_blank">Memori</a></td>
-      <td><span class="pill p-ctx">Context</span></td>
-      <td>Persistent memory layer that loads a compact slice per query instead of full-context replay.</td>
-      <td>~1,294 tok/query (~5% of full); <strong>20×+</strong></td>
-    </tr>
-    <tr>
-      <td><a href="https://github.com/DeusData/codebase-memory-mcp" target="_blank">Codebase Memory MCP</a></td>
-      <td><span class="pill p-ctx">Context</span></td>
-      <td>Code knowledge graph — answers "where is X / what calls Y" via sub-ms queries instead of file-by-file <code>grep</code>/read exploration. The biggest win on coding projects.</td>
-      <td>~99% (3,400 vs 412,000 tok / 5 queries)</td>
-    </tr>
-  </tbody>
-</table>
-</section>
-<div class="callout warn">
-  <strong>Reduce or increase?</strong> Memory skills are a <em>trade</em> — a one-time store cost + small per-lookup cost
-  in exchange for not re-sending history/files every turn. They <strong>save</strong> on long or multi-session work with
-  high reuse, but can <strong>cost</strong> extra on a short one-pass task. See the break-even note in
-  <code>token-saving-skills-research.md</code>.
-</div>
 
 <h2><span class="num">C</span>GitHub Copilot settings — the highest-ROI changes</h2>
 <p class="lead">From GitHub's own engineering guidance and the dedicated
@@ -338,7 +291,56 @@
 </ol>
 </section>
 
-<h2><span class="num">D</span>Security Audit</h2>
+<h2><span class="num">D</span>Caveman &amp; memory skills (from the companion research)</h2>
+<p class="lead">Pulled from the deep-research notes in <code>token-saving-skills-research.md</code>. These are
+  Claude&nbsp;Code&ndash;oriented skills, but the principles map onto the same three token categories.
+  <span style="color:var(--output)">Caveman</span> attacks <em>output</em>; <span style="color:var(--context)">memory</span>
+  skills attack <em>context</em> (replayed history + repeated file scans).</p>
+<section class="block" style="padding:10px 18px">
+<table>
+  <thead><tr><th>Skill / system</th><th>Category</th><th>What it does &amp; why it saves</th><th>Reported savings</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/JuliusBrussee/caveman" target="_blank">caveman</a></td>
+      <td><span class="pill p-out">Output</span></td>
+      <td>Drop-in skill that forces terse, filler-free responses — strips pleasantries, restatements, and step-by-step narration. <em>Caveat:</em> affects only output tokens.</td>
+      <td>~65% output (peaks ~87%); <strong>~30–50%</strong> real-world bill</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/JuliusBrussee/caveman" target="_blank">caveman-compress</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Companion skill that rewrites <code>CLAUDE.md</code> / project notes into a denser form. Memory files reload <em>every</em> session, so one compression saves input tokens permanently.</td>
+      <td>~46% smaller memory files</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/mem0ai/mem0" target="_blank">Mem0</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Fact extraction → vector store. Retrieves stored facts instead of replaying the whole conversation each call.</td>
+      <td>~90% fewer tokens, 91% lower latency</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/MemoriLabs/Memori" target="_blank">Memori</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Persistent memory layer that loads a compact slice per query instead of full-context replay.</td>
+      <td>~1,294 tok/query (~5% of full); <strong>20×+</strong></td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/DeusData/codebase-memory-mcp" target="_blank">Codebase Memory MCP</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Code knowledge graph — answers "where is X / what calls Y" via sub-ms queries instead of file-by-file <code>grep</code>/read exploration. The biggest win on coding projects.</td>
+      <td>~99% (3,400 vs 412,000 tok / 5 queries)</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+<div class="callout warn">
+  <strong>Reduce or increase?</strong> Memory skills are a <em>trade</em> — a one-time store cost + small per-lookup cost
+  in exchange for not re-sending history/files every turn. They <strong>save</strong> on long or multi-session work with
+  high reuse, but can <strong>cost</strong> extra on a short one-pass task. See the break-even note in
+  <code>token-saving-skills-research.md</code>.
+</div>
+
+<h2><span class="num">E</span>Security Audit</h2>
 <p class="lead">Every linked repository was cloned and audited for install-time code execution, telemetry/exfiltration,
   dangerous code patterns (eval/pickle/trust_remote_code), agent attack surface (skills/hooks/MCP), and maintenance.
   Full per-repo reports live in the <code>risk assessment/</code> folder. No malware was found in any repository.
@@ -353,6 +355,7 @@
     <tr data-report="guidance"><td>guidance-ai/guidance</td><td class="ok">✓ Low</td><td>trust_remote_code only as explicit user passthrough; no telemetry; ships native parser wheels (standard ecosystem trust).</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
     <tr data-report="baml"><td>BoundaryML/baml</td><td class="no" style="color:var(--warn)">~ Low-Mod</td><td>Ships compiled binaries; curl|sh installer with rolling toolchain channel; <strong>PostHog telemetry in IDE/playground tooling</strong> — disable if sensitive. Install via pinned npm/pip packages instead.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
     <tr data-report="repomix"><td>yamadashy/repomix</td><td class="ok">✓ Low</td><td>No telemetry in CLI; network only to codeload.github.com on explicit remote packs; <strong>built-in Secretlint secret scanning</strong>. Best security posture of the packers.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="gitingest"><td>coderamp-labs/gitingest</td><td class="ok">✓ Low (CLI)</td><td>CLI is local and clean. <strong>Hosted gitingest.com sends your repo to their servers</strong> — CLI only for private code. No secret scanning.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
     <tr data-report="code2prompt"><td>mufeedvh/code2prompt</td><td class="ok">✓ Low</td><td>Rust CLI with no HTTP dependencies — offline by construction. Prefer <code>cargo install</code> over release binaries.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
     <tr data-report="files-to-prompt"><td>simonw/files-to-prompt</td><td class="ok">✓ Very low</td><td>10 files, zero network/exec/pickle; trusted author. Lowest-risk repo in the audit.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
     <tr data-report="github-copilot-token-optimization"><td>olivomarco/copilot-token-optimization</td><td class="no" style="color:var(--warn)">~ Low-Mod</td><td>Guide itself is harmless. Bundled "squad" skills = large standing-instruction surface; <code>sync-mesh.sh</code> has an <strong>eval-curl shell-injection path</strong> driven by <code>mesh.json</code> values — never run it on an untrusted <code>mesh.json</code>. Adopt skills individually after reading.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
@@ -577,6 +580,37 @@ Mainly self-inflicted data leakage via the packed output, not the tool itself.
 
 ## Recommendation
 Safe to adopt — the best-engineered tool in this audit from a security standpoint. Review packed output before pasting it anywhere external; keep its default security check enabled (don't run `--no-security-check` out of habit).
+</script>
+<script type="text/markdown" id="report-gitingest">
+# Security Assessment — coderamp-labs/gitingest
+**Verdict: ✅ LOW RISK (CLI) / 🟡 privacy caveat (hosted service)**
+Audited 2026-06-12 · Last upstream commit: 2025-08-16 (~10 months quiet) · 125 files · Python
+
+## What it is
+Turns a Git repo into a prompt-friendly text digest. Two very different usage modes: a local pip CLI, and the hosted **gitingest.com** site (swap `hub`→`ingest` in a GitHub URL).
+
+## Findings
+
+### 🟡 F1 — The hosted service processes your code on their servers
+The repo contains the full server (`src/server/` — FastAPI, S3 utilities, hosting config). Using gitingest.com on a **private** repo (or pasting a token) means your code transits and may be stored on coderamp's infrastructure (S3-backed). For public repos this is moot; for anything private, use the CLI locally instead.
+
+### 🟢 Clean areas (CLI path)
+- The `gitingest` Python package itself makes no analytics calls; it shells out to `git clone` for the repo you specify and processes files locally.
+- No install hooks; `pyproject`-based packaging.
+- No `eval`/`exec`/pickle patterns in the ingestion code.
+
+### 🟡 F2 — Maintenance is slowing
+~10 months since last commit. The tool is simple enough that this is tolerable, but dependency patching lags.
+
+### 🟡 F3 — Inherent output risk
+Same as all context-packers: the digest is your codebase in one blob, with **no built-in secret scanning** (unlike repomix). `.gitignore`d files are excluded, but committed secrets/configs are not detected.
+
+## What you expose yourself to
+- CLI: essentially nothing beyond normal `git`/filesystem trust.
+- Hosted site: your repository content on third-party infrastructure.
+
+## Recommendation
+Use the **CLI** for anything non-public. Treat gitingest.com as "uploading your code to a stranger's server", because that is mechanically what it is. Prefer repomix where secret-scanning matters.
 </script>
 <script type="text/markdown" id="report-code2prompt">
 # Security Assessment — mufeedvh/code2prompt
