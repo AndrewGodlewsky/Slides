@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token-Reduction Skills &amp; Tools — Deep Research</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171a23; --panel2:#1e222e; --border:#2a2f3d;
+    --text:#e6e8ee; --muted:#9aa3b2; --accent:#7c9cff; --accent2:#5ad1a5;
+    --input:#7c9cff; --output:#ff9f6e; --context:#c08bff; --warn:#ffd166;
+    --chip:#232838;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;font-size:16px}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 22px 80px}
+  header.hero{border:1px solid var(--border);border-radius:16px;
+    background:linear-gradient(160deg,#1b2030,#141722);padding:34px 30px;margin-bottom:30px}
+  h1{margin:0 0 6px;font-size:30px;letter-spacing:-.5px}
+  .sub{color:var(--muted);font-size:15px;margin-bottom:18px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{background:var(--chip);border:1px solid var(--border);color:var(--muted);
+    padding:4px 11px;border-radius:999px;font-size:12.5px}
+  h2{font-size:22px;margin:42px 0 8px;letter-spacing:-.3px}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:8px}
+  .lead{color:var(--muted);margin:0 0 18px}
+  .cards{display:grid;grid-template-columns:1fr;gap:18px}
+  @media(min-width:840px){.cards{grid-template-columns:repeat(3,1fr)}}
+  .card{border:1px solid var(--border);border-radius:14px;background:var(--panel);
+    padding:20px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .card .tag{position:absolute;top:0;left:0;height:4px;width:100%}
+  .card.input .tag{background:var(--input)} .card.output .tag{background:var(--output)}
+  .card.context .tag{background:var(--context)}
+  .cat{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:4px}
+  .card.input .cat{color:var(--input)} .card.output .cat{color:var(--output)} .card.context .cat{color:var(--context)}
+  .pick{font-size:20px;font-weight:700;margin:2px 0 2px}
+  .pick a{color:var(--text);text-decoration:none;border-bottom:1px dotted var(--muted)}
+  .stars{color:var(--warn);font-size:13px;margin-bottom:10px}
+  .card p{margin:0 0 12px;font-size:14.5px;color:#cdd2dd}
+  .save{margin-top:auto;background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;padding:10px 12px;font-size:13px}
+  .save b{color:var(--accent2)}
+  .copilot-flag{font-size:12px;margin-top:10px;padding:6px 9px;border-radius:7px;display:inline-block}
+  .yes{background:rgba(90,209,165,.12);color:var(--accent2);border:1px solid rgba(90,209,165,.3)}
+  .indirect{background:rgba(255,209,102,.1);color:var(--warn);border:1px solid rgba(255,209,102,.28)}
+  section.block{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:24px 26px;margin-top:18px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em}
+  td a{color:var(--accent);text-decoration:none} td a:hover{text-decoration:underline}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .p-in{background:rgba(124,156,255,.14);color:var(--input)}
+  .p-out{background:rgba(255,159,110,.14);color:var(--output)}
+  .p-ctx{background:rgba(192,139,255,.14);color:var(--context)}
+  .ok{color:var(--accent2);font-weight:700} .no{color:var(--muted)}
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:0}
+  ol.steps li{counter-increment:s;position:relative;padding:12px 0 12px 46px;border-bottom:1px solid var(--border)}
+  ol.steps li:last-child{border-bottom:none}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:11px;width:30px;height:30px;
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--accent);
+    font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+  ol.steps b{color:var(--text)}
+  ol.steps .roi{font-size:12px;color:var(--accent2);font-weight:600;margin-left:6px}
+  code{background:var(--panel2);border:1px solid var(--border);border-radius:5px;
+    padding:1px 6px;font-family:"SF Mono",Consolas,Monaco,monospace;font-size:13px;color:#ffd9b0}
+  .callout{border-left:3px solid var(--accent);background:var(--panel2);
+    padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px;color:#cdd2dd}
+  .callout.warn{border-left-color:var(--warn)}
+  .src{font-size:13.5px;color:var(--muted)}
+  .src a{color:var(--accent);text-decoration:none}
+  .src li{margin-bottom:5px}
+  footer{margin-top:40px;color:var(--muted);font-size:12.5px;text-align:center;line-height:1.7}
+  .ratio{display:flex;gap:2px;height:26px;border-radius:6px;overflow:hidden;margin:14px 0;border:1px solid var(--border)}
+  .ratio div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0f1117}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Token-Reduction Skills &amp; Tools for AI Coding / GitHub Copilot</h1>
+  <div class="sub">Deep-research findings — one standout tool per token category, plus directly-applicable GitHub Copilot settings.</div>
+  <p style="color:#cdd2dd;margin:0">
+    Because every Copilot interaction is billed by tokens (and you spend
+    <strong>AI Credits</strong> at <code>1 credit = $0.01</code>), cutting tokens directly stretches your
+    3,900-credit monthly allowance. The biggest lever is <strong>output tokens</strong>, which cost
+    <strong>~5&times; more</strong> than input — so output control delivers the highest ROI per change.
+  </p>
+  <div class="ratio" title="Relative per-token price for Claude Sonnet">
+    <div style="flex:10;background:var(--input)">INPUT&nbsp;&times;10</div>
+    <div style="flex:1;background:#5ad1a5">CACHED&nbsp;&times;1</div>
+    <div style="flex:50;background:var(--output)">OUTPUT&nbsp;&times;50</div>
+  </div>
+  <div class="sub" style="margin:0">Price ratio per token (Sonnet 4.x): input&nbsp;:&nbsp;cached&nbsp;:&nbsp;output &asymp; 10&nbsp;:&nbsp;1&nbsp;:&nbsp;50</div>
+  <div class="meta">
+    <span class="chip">Mined: 117,552 GitHub repos &gt;500&#9733; (snapshot 2026-06-01)</span>
+    <span class="chip">+ live web research</span>
+    <span class="chip">Compiled June 2026</span>
+  </div>
+</header>
+
+<p class="lead">
+  <strong>How to read this:</strong> the three categories you asked about map to <em>where</em> in a request
+  tokens get spent. <span style="color:var(--input)">Input</span> = what you send each call.
+  <span style="color:var(--output)">Output</span> = what the model generates.
+  <span style="color:var(--context)">Context</span> = the standing/repeated material (history, system files,
+  retrieved code, cache) that rides along on <em>every</em> turn. Each card below is the single best-in-class tool
+  I found for that category, with an honest note on whether it plugs into GitHub Copilot directly or applies as a technique.
+</p>
+
+<div class="cards">
+
+  <div class="card input">
+    <div class="tag"></div>
+    <div class="cat">Input tokens</div>
+    <div class="pick"><a href="https://github.com/microsoft/LLMLingua" target="_blank">microsoft / LLMLingua</a></div>
+    <div class="stars">&#9733; 6,234 &middot; Python &middot; Microsoft Research</div>
+    <p>Prompt-compression engine. A small model strips non-essential tokens from a prompt before it's sent —
+       <strong>up to 20&times; compression</strong> with minimal quality loss. Best for long, repetitive context
+       (docs, transcripts, RAG chunks) you feed to an LLM.</p>
+    <div class="copilot-flag indirect">&#9888; Technique for your own API apps — not inside Copilot Chat. For Copilot, apply the <em>principle</em> via content exclusion + repomix&nbsp;<code>--compress</code>.</div>
+    <div class="save">Reported real-world: one team cut <b>$42K&rarr;$2.1K/mo</b>. A 2,400-token prompt &rarr; 115 tokens at 20&times;.</div>
+  </div>
+
+  <div class="card output">
+    <div class="tag"></div>
+    <div class="cat">Output tokens</div>
+    <div class="pick"><a href="https://github.com/567-labs/instructor" target="_blank">567-labs / instructor</a></div>
+    <div class="stars">&#9733; 13,077 &middot; Python (+ TS/Go/Rust)</div>
+    <p>Forces the model to emit <strong>structured output</strong> (typed JSON / schema) instead of rambling prose.
+       No preamble, no "Sure! Here's…", no trailing explanation — just the data. Eliminates the verbose tokens that
+       cost 5&times; the most. Alternatives: <a href="https://github.com/dottxt-ai/outlines" target="_blank">outlines</a>,
+       <a href="https://github.com/guidance-ai/guidance" target="_blank">guidance</a>,
+       <a href="https://github.com/BoundaryML/baml" target="_blank">BAML</a>.</p>
+    <div class="copilot-flag indirect">&#9888; For your own apps. In Copilot, get the same effect with <em>terse custom instructions</em> (see checklist &rarr;).</div>
+    <div class="save">Schema-constrained replies typically cut output <b>40–70%</b> on code/extraction tasks.</div>
+  </div>
+
+  <div class="card context">
+    <div class="tag"></div>
+    <div class="cat">Context tokens</div>
+    <div class="pick"><a href="https://github.com/zilliztech/GPTCache" target="_blank">zilliztech / GPTCache</a></div>
+    <div class="stars">&#9733; 8,047 &middot; Python</div>
+    <p>A <strong>semantic cache</strong> for LLM calls: repeated or near-identical requests are served from cache
+       instead of re-processing the whole context, slashing repeated context spend. Pairs with the idea behind
+       Copilot's own <em>cached input tokens</em> (billed ~10&times; cheaper).</p>
+    <div class="copilot-flag indirect">&#9888; For your own apps. Copilot does prefix caching automatically — keep sessions stable to maximize cache hits.</div>
+    <div class="save">For repeated workloads, cache hits avoid full re-processing — <b>cached input is ~1/10th</b> the price of fresh input.</div>
+  </div>
+
+</div>
+
+<div class="callout">
+  <strong>The honest catch:</strong> the three "best-in-class" picks above are libraries for building <em>your own</em>
+  LLM applications via API. Inside the GitHub Copilot product you can't drop in LLMLingua or Instructor — but the
+  <em>same three principles</em> (compress input, constrain output, cache/trim context) all have direct Copilot
+  equivalents. The tools that <strong>do</strong> plug straight into Copilot are the <strong>context-packers</strong>
+  (repomix, gitingest) and Copilot's own settings — covered next.
+</div>
+
+<h2><span class="num">A</span>Tools you CAN use with GitHub Copilot directly</h2>
+<p class="lead">These are usable today: pack your repo with one of these and paste the compressed result into Copilot Chat
+  (or run repomix as an MCP server), instead of letting Copilot index your whole workspace.</p>
+<section class="block" style="padding:10px 18px">
+<table>
+  <thead><tr><th>Tool</th><th>Stars</th><th>Category</th><th>What it does for tokens</th><th>Copilot-ready</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/yamadashy/repomix" target="_blank">yamadashy/repomix</a></td>
+      <td>25,837</td><td><span class="pill p-ctx">Context</span></td>
+      <td>Packs a repo into one AI-friendly file; <code>--compress</code> uses Tree-sitter to keep structure while cutting <strong>~70%</strong> of tokens. Reports per-file token counts. Also an MCP server.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/coderamp-labs/gitingest" target="_blank">coderamp-labs/gitingest</a></td>
+      <td>14,806</td><td><span class="pill p-in">Input</span></td>
+      <td>Swap <code>hub</code>&rarr;<code>ingest</code> in any GitHub URL to get a prompt-friendly digest of a codebase. Trim to only the files you need before pasting.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/zilliztech/claude-context" target="_blank">zilliztech/claude-context</a></td>
+      <td>11,669</td><td><span class="pill p-ctx">Context</span></td>
+      <td>Code-search MCP that makes your codebase the context via semantic retrieval — feeds only relevant snippets to the agent instead of the whole tree.</td>
+      <td class="ok">&#10003; MCP</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/mufeedvh/code2prompt" target="_blank">mufeedvh/code2prompt</a></td>
+      <td>7,378</td><td><span class="pill p-in">Input</span></td>
+      <td>CLI that turns a codebase into a single prompt with a source tree + token count and glob filtering, so you send only what matters.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/simonw/files-to-prompt" target="_blank">simonw/files-to-prompt</a></td>
+      <td>2,743</td><td><span class="pill p-in">Input</span></td>
+      <td>Concatenate selected files into one clean prompt — lightweight way to hand-pick minimal context.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/yvgude/lean-ctx" target="_blank">yvgude/lean-ctx</a></td>
+      <td>2,330</td><td><span class="pill p-ctx">Context</span></td>
+      <td>"Context OS" for AI dev; claims up to <strong>99% token savings</strong>, works with Cursor-style tools, no code changes. Newer — evaluate before trusting the headline number.</td>
+      <td class="indirect" style="color:var(--warn)">&#9888; Verify</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+
+<h2><span class="num">B</span>GitHub Copilot settings — the highest-ROI changes</h2>
+<p class="lead">From GitHub's own engineering guidance and the dedicated
+  <a href="https://github.com/olivomarco/github-copilot-token-optimization" target="_blank" style="color:var(--accent)">copilot-token-optimization</a>
+  guide. Ordered by impact. The first three take ~15 minutes total and hit all three token categories.</p>
+<section class="block">
+<ol class="steps">
+  <li><b>Add output-control rules to <code>.github/copilot-instructions.md</code></b> <span class="roi">↓ output 40–70%</span><br>
+      e.g. <code>"Code only, no explanation unless asked."</code> and <code>"Bullets over paragraphs."</code>
+      Output is the 5&times;-priced category, so this is the single biggest win.
+      <span class="pill p-out" style="margin-left:4px">Output</span></li>
+  <li><b>Shrink your always-on context files</b> <span class="roi">↓ context every call</span><br>
+      <code>copilot-instructions.md</code> and <code>AGENTS.md</code> are re-sent on <em>every</em> interaction. Strip
+      LLM-generated boilerplate; keep only short, specific rules. Split big ones and use <code>applyTo:</code> path
+      scoping so they load only when relevant. <span class="pill p-ctx" style="margin-left:4px">Context</span></li>
+  <li><b>Default to the <code>Auto</code> model</b> <span class="roi">↓ cost + paid-plan discount</span><br>
+      Auto picks a right-sized model and earns the documented multiplier discount on paid plans. Pin Opus/GPT-5.5
+      only when a task truly needs it. Use <strong>Haiku</strong> (~4&times; cheaper than Sonnet) for simple edits.
+      <span class="pill p-out" style="margin-left:4px">Output</span></li>
+  <li><b>Use Ask Mode for simple questions, not Agent Mode</b> <span class="roi">↓ 60–90%</span><br>
+      Agent Mode spends tokens on tool-call reasoning loops. A plain question doesn't need an agent.
+      <span class="pill p-ctx" style="margin-left:4px">Context</span></li>
+  <li><b>Disable unused MCP servers</b> <span class="roi">↓ 100–500 tok / step</span><br>
+      Each tool's schema rides in context every agent step. 15 unused servers &times; 15 steps &asymp; <strong>265K wasted tokens</strong>.
+      <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Configure Content Exclusion</b> (Business/Enterprise) <span class="roi">most reliable trim</span><br>
+      Tell Copilot which files/paths to skip entirely — generated code, vendored deps, large fixtures.
+      <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Prefer CLI over MCP for deterministic data</b> <span class="roi">↓ input</span><br>
+      Run <code>gh pr diff</code> / fetch files <em>up front</em>, then point the agent at them — no tool-call JSON
+      schemas or reasoning overhead. <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Convert <code>.docx/.pdf/.pptx/.xlsx</code> to Markdown first</b> (e.g. Microsoft MarkItDown) <span class="roi">strips noise</span><br>
+      Raw office/HTML formatting is token-dense junk. <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Session hygiene</b> <span class="roi">↓ context drift</span><br>
+      Close unused editor tabs and start fresh conversations — accumulated context silently inflates every turn.
+      Keep the front of the session stable so prefix caching keeps hitting. <span class="pill p-ctx" style="margin-left:4px">Context</span></li>
+  <li><b>Write precise prompts</b> <span class="roi">↓ clarification loops</span><br>
+      <code>"Add a null check to getUser()"</code> beats <code>"fix the user code"</code> — fewer back-and-forth round trips.
+      <span class="pill p-out" style="margin-left:4px">Output</span></li>
+</ol>
+</section>
+
+<h2><span class="num">C</span>Bonus — token-saving "skills" you already have here</h2>
+<p class="lead">Since you framed this as "skills" and you're working inside Claude Code, note these installed skills are literally
+  token reducers (Claude Code, not Copilot — but same principles):</p>
+<section class="block" style="padding:10px 18px">
+<table>
+  <thead><tr><th>Skill</th><th>Category</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td><code>huhhb:caveman</code></td><td><span class="pill p-out">Output</span></td><td>Ultra-compressed responses — cuts output ~75% while keeping technical accuracy.</td></tr>
+    <tr><td><code>huhhb:caveman-compress</code></td><td><span class="pill p-ctx">Context</span></td><td>Compresses memory files (CLAUDE.md, todos) so they cost fewer input tokens every load.</td></tr>
+    <tr><td><code>huhhb:cavecrew</code></td><td><span class="pill p-ctx">Context</span></td><td>Compresses sub-agent output ~60% so the main context lasts longer across long sessions.</td></tr>
+    <tr><td><code>huhhb:caveman-stats</code></td><td>—</td><td>Reports real token usage + estimated savings for the session.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<h2><span class="num">D</span>Bottom line — one pick per category</h2>
+<section class="block">
+<table>
+  <thead><tr><th>Category</th><th>Best general tool</th><th>What to actually do in Copilot</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="pill p-in">Input</span></td>
+      <td><a href="https://github.com/microsoft/LLMLingua" target="_blank">LLMLingua</a> (compress prompts)</td>
+      <td>Pack context with <a href="https://github.com/yamadashy/repomix" target="_blank">repomix&nbsp;<code>--compress</code></a> + Content Exclusion + prune MCP servers.</td>
+    </tr>
+    <tr>
+      <td><span class="pill p-out">Output</span></td>
+      <td><a href="https://github.com/567-labs/instructor" target="_blank">Instructor</a> (structured output)</td>
+      <td>Add <code>"Code only, no explanation"</code> to <code>copilot-instructions.md</code>; use Haiku/Auto + medium reasoning.</td>
+    </tr>
+    <tr>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td><a href="https://github.com/zilliztech/GPTCache" target="_blank">GPTCache</a> (semantic cache)</td>
+      <td>Shrink always-on instruction files, start fresh sessions, keep prefixes stable for Copilot's built-in caching.</td>
+    </tr>
+  </tbody>
+</table>
+<div class="callout" style="margin-bottom:0">
+  <strong>If you do only one thing:</strong> add output-control rules to <code>copilot-instructions.md</code>.
+  Output tokens are 5&times; the price of input, so trimming verbose replies is the fastest way to make your
+  3,900 monthly credits go further.
+</div>
+</section>
+
+<h2><span class="num">E</span>Sources &amp; method</h2>
+<section class="block">
+  <p class="src" style="margin-top:0"><strong>Method:</strong> mined your <code>output_2026-06-01.csv</code>
+  (117,552 repos &gt;500&#9733;) by keyword across name/description/topics, ranked by stars and verified each repo's
+  count via proper CSV parsing; cross-checked the shortlist and Copilot-specific guidance against live web sources below.</p>
+  <ul class="src">
+    <li><a href="https://github.blog/ai-and-ml/github-copilot/improving-token-efficiency-in-github-agentic-workflows/" target="_blank">Improving token efficiency in GitHub Agentic Workflows — GitHub Blog</a></li>
+    <li><a href="https://github.com/olivomarco/github-copilot-token-optimization" target="_blank">olivomarco/github-copilot-token-optimization — techniques guide</a></li>
+    <li><a href="https://docs.github.com/en/copilot/tutorials/optimize-ai-usage" target="_blank">Improving agent quality to optimize AI usage — GitHub Docs</a></li>
+    <li><a href="https://github.com/microsoft/LLMLingua" target="_blank">microsoft/LLMLingua</a> &middot; <a href="https://www.microsoft.com/en-us/research/blog/llmlingua-innovating-llm-efficiency-with-prompt-compression/" target="_blank">MSR blog</a></li>
+    <li><a href="https://github.com/yamadashy/repomix" target="_blank">yamadashy/repomix</a> &middot; <a href="https://github.com/567-labs/instructor" target="_blank">567-labs/instructor</a> &middot; <a href="https://github.com/zilliztech/GPTCache" target="_blank">zilliztech/GPTCache</a></li>
+  </ul>
+  <div class="callout warn" style="margin-bottom:0">
+    <strong>Caveats:</strong> (1) Your dataset is dated <strong>2026-06-01</strong> — the <code>2026-06-11</code> file
+    wasn't on disk, so star counts are ~10 days old. (2) Savings figures (20&times;, 70%, 40–70%, 99%) are vendor/
+    author claims — treat as directional and benchmark on your own workload. (3) The "best general tool" picks are
+    API libraries for building your own apps; for the Copilot <em>product</em>, the column D right-hand actions are
+    what you can apply directly.
+  </div>
+</section>
+
+<footer>
+  Generated as a self-contained HTML report &middot; open in any browser, no internet required.<br>
+  Pricing/token mechanics referenced from the companion <code>AI-Harnesses-and-Copilot-Billing-Notes.md</code>.
+</footer>
+
+</div>
+</body>
+</html>

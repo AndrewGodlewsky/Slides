@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Copilot Model Cheat Sheet (2026)</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b6470; --line:#e2e5ea; --bg:#fbfcfd; --card:#fff;
+    --green:#137a3f; --greenbg:#e8f5ec; --amber:#9a6700; --amberbg:#fff5e0;
+    --red:#9a2a2a; --redbg:#fdecec; --blue:#0b5fa4; --bluebg:#e9f2fb;
+    --purple:#5b2a9a; --purplebg:#efe6fb;
+    --chip:#eef1f5; --shadow:0 6px 28px rgba(20,30,50,.16);
+  }
+  *{box-sizing:border-box}
+  body{
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; padding:0 18px 80px;
+  }
+  .wrap{max-width:1080px; margin:0 auto}
+  header{padding:34px 0 8px; border-bottom:2px solid var(--ink); margin-bottom:8px}
+  h1{font-size:27px; margin:0 0 4px}
+  h2{font-size:20px; margin:38px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--line)}
+  h3{font-size:15px; margin:0 0 6px}
+  .sub{color:var(--muted); font-size:13.5px; margin:0}
+  p{margin:8px 0}
+  .note{background:var(--bluebg); border-left:4px solid var(--blue); padding:10px 14px; border-radius:4px; font-size:13.5px; margin:14px 0}
+  table{border-collapse:collapse; width:100%; font-size:13px; margin:10px 0 4px}
+  th,td{border:1px solid var(--line); padding:7px 9px; text-align:left; vertical-align:top}
+  th{background:#f1f3f6; font-weight:600}
+  tbody tr:nth-child(even){background:#f7f9fb}
+  td.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+  .muted{color:var(--muted)}
+  .tier{font-weight:600; font-size:11px; padding:2px 7px; border-radius:20px; white-space:nowrap; display:inline-block}
+  .t-flag{background:#efe6fb; color:#5b2a9a}
+  .t-work{background:var(--greenbg); color:var(--green)}
+  .t-budget{background:var(--amberbg); color:var(--amber)}
+  .t-spec{background:var(--bluebg); color:var(--blue)}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:14px; margin-top:12px}
+  .card{border:1px solid var(--line); border-radius:8px; padding:13px 15px; background:#fff}
+  .card .price{color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums}
+  .card ul{margin:8px 0 0; padding-left:18px}
+  .card li{margin:3px 0; font-size:13px}
+  .good::marker{color:var(--green)} .bad::marker{color:var(--red)}
+  .lbl{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-top:9px; color:var(--muted)}
+  .lbl.g{color:var(--green)} .lbl.b{color:var(--red)}
+  .fam{font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); margin:18px 0 2px}
+  .swap td:nth-child(1){font-weight:600}
+  .arrow{color:var(--green); font-weight:700}
+  .save{color:var(--green); font-weight:600; white-space:nowrap}
+  code{background:var(--chip); padding:1px 5px; border-radius:4px; font-size:12.5px}
+  .legend{font-size:12px; color:var(--muted); margin:6px 0 0}
+  .legend span{margin-right:14px}
+  footer{margin-top:40px; padding-top:14px; border-top:1px solid var(--line); font-size:12px; color:var(--muted)}
+  footer a{color:var(--blue)}
+  @media print{ body{padding:0} .grid{grid-template-columns:1fr 1fr} }
+
+  /* ===== interactive explorer (namespaced under #explorer to avoid class collisions) ===== */
+  #explorer{margin-top:8px}
+  #explorer .panel{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:16px}
+  #explorer .frow{display:flex; flex-wrap:wrap; align-items:flex-start; gap:7px; margin:7px 0}
+  #explorer .frow .flabel{font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); width:108px; flex:none; padding-top:6px}
+  #explorer .frow > span:not(.flabel){display:flex; flex-wrap:wrap; gap:7px; flex:1 1 0; min-width:0}
+  #explorer .chip{cursor:pointer; user-select:none; border:1px solid var(--line); background:#fff; border-radius:20px; padding:5px 13px; font-size:13px; font-weight:500; transition:.12s; white-space:nowrap}
+  #explorer .chip:hover{border-color:#aab2bd}
+  #explorer .chip.on{background:var(--ink); color:#fff; border-color:var(--ink)}
+  #explorer .chip .dot{font-size:10px; margin-right:5px; opacity:.65}
+  #explorer .uc.on{background:var(--blue); border-color:var(--blue)}
+  #explorer .controls{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); font-size:13px}
+  #explorer .controls label{cursor:pointer; user-select:none}
+  #explorer .count{font-weight:700}
+  #explorer .reset{margin-left:auto; cursor:pointer; border:1px solid var(--line); background:#fff; border-radius:7px; padding:6px 12px; font-size:13px; font-weight:600}
+  #explorer .reset:hover{border-color:#aab2bd}
+  #explorer select{font:inherit; font-size:13px; padding:5px 8px; border:1px solid var(--line); border-radius:7px; background:#fff}
+  #explorer .ucbar{font-size:13px; color:var(--muted); margin:0 0 12px; min-height:18px}
+  #explorer .ucbar b{color:var(--ink)}
+  #explorer .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:14px; margin-top:0}
+  #explorer .mc{border:1px solid var(--line); border-radius:10px; padding:14px 15px; background:var(--card); cursor:pointer; transition:.14s; display:flex; flex-direction:column}
+  #explorer .mc:hover{box-shadow:var(--shadow); transform:translateY(-2px); border-color:#c4ccd6}
+  #explorer .mc h3{font-size:16px; margin:0 0 2px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  #explorer .prov{font-size:11px; color:var(--muted); font-weight:600}
+  #explorer .tier{font-weight:700; font-size:10px; padding:2px 7px; border-radius:20px; white-space:nowrap; display:inline-block}
+  #explorer .t-flagship{background:var(--purplebg); color:var(--purple)}
+  #explorer .t-workhorse{background:var(--greenbg); color:var(--green)}
+  #explorer .t-specialist{background:var(--bluebg); color:var(--blue)}
+  #explorer .t-budget{background:var(--amberbg); color:var(--amber)}
+  #explorer .fit{font-weight:700; font-size:10px; padding:2px 7px; border-radius:20px; margin-left:auto}
+  #explorer .fit-best{background:var(--green); color:#fff}
+  #explorer .fit-good{background:var(--greenbg); color:var(--green)}
+  #explorer .fit-ok{background:var(--chip); color:var(--muted)}
+  #explorer .price{font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--muted); margin:7px 0 8px; display:flex; gap:12px; flex-wrap:wrap}
+  #explorer .price b{color:var(--ink); font-weight:600}
+  #explorer .best{font-size:13px; color:#333; flex:1}
+  #explorer .mc .swap{font-size:12px; color:var(--muted); margin-top:10px; padding-top:9px; border-top:1px solid var(--line)}
+  #explorer .mc .swap b{color:var(--green)}
+  #explorer .legacy-badge{font-size:10px; color:var(--muted); border:1px solid var(--line); border-radius:20px; padding:1px 6px}
+  #explorer .empty{text-align:center; color:var(--muted); padding:50px 0; font-size:15px}
+  #explorer .backdrop{position:fixed; inset:0; background:rgba(15,22,34,.5); display:none; align-items:center; justify-content:center; padding:20px; z-index:50}
+  #explorer .backdrop.show{display:flex}
+  #explorer .modal{background:var(--card); border-radius:14px; max-width:620px; width:100%; max-height:90vh; overflow:auto; box-shadow:var(--shadow); padding:22px 24px}
+  #explorer .modal h2{margin:0 0 2px; font-size:22px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; border:0; padding:0}
+  #explorer .modal .mprov{color:var(--muted); font-size:13px; margin:0 0 14px}
+  #explorer .modal table{border-collapse:collapse; width:100%; font-size:13px; margin:6px 0 14px}
+  #explorer .modal th,#explorer .modal td{border:1px solid var(--line); padding:6px 9px; text-align:right; vertical-align:middle; font-variant-numeric:tabular-nums}
+  #explorer .modal th{background:#f1f3f6; text-align:right; font-weight:600}
+  #explorer .modal th:first-child,#explorer .modal td:first-child{text-align:left}
+  #explorer .lbl{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin:14px 0 4px; color:var(--muted)}
+  #explorer .lbl.g{color:var(--green)} #explorer .lbl.b{color:var(--red)}
+  #explorer .modal ul{margin:0; padding-left:20px}
+  #explorer .modal li{margin:4px 0; font-size:13.5px}
+  #explorer .ucpills{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 4px}
+  #explorer .ucpill{font-size:11.5px; border-radius:20px; padding:3px 10px; background:var(--chip)}
+  #explorer .ucpill.best{background:var(--green); color:#fff; font-weight:600}
+  #explorer .ucpill.good{background:var(--greenbg); color:var(--green)}
+  #explorer .swapbox{background:var(--greenbg); border-radius:8px; padding:10px 13px; margin-top:14px; font-size:13.5px}
+  #explorer .swapbox b{color:var(--green)}
+  #explorer .closex{position:sticky; top:0; float:right; cursor:pointer; border:none; background:none; font-size:24px; line-height:1; color:var(--muted); margin:-6px -6px 0 0}
+  #explorer .closex:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>GitHub Copilot Model Cheat Sheet</h1>
+  <p class="sub">When to use which model &mdash; matched to strengths, cost, and a cheaper near-equal alternative. Pricing &amp; lineup current as of June 2026.</p>
+</header>
+
+<div class="note">
+  <strong>How cost works.</strong> Copilot bills these models from <strong>AI credits</strong> at the per-token rates below (<code>1 AI credit = $0.01 USD</code>). Your paid plan includes a monthly credit allowance; overage is charged at these rates. <strong>Code completions and next-edit suggestions are never billed</strong> &mdash; they stay unlimited on paid plans. Because <em>output</em> tokens dominate real cost, the "expensive" warnings below track the output column. Some models have a cheaper <em>Default</em> tier and a pricier <em>Long-context</em> tier that kicks in past the token threshold shown.
+</div>
+
+<!-- ============ QUICK DECISION GUIDE ============ -->
+<h2>1. Quick decision guide &mdash; pick by the job</h2>
+<table>
+  <thead><tr><th style="width:38%">If you're doing&hellip;</th><th>Reach for</th><th>Why (and the cheaper fallback)</th></tr></thead>
+  <tbody>
+    <tr><td>Everyday coding &mdash; bug fixes, features, tests, code review (the 80%)</td><td><strong>Claude Sonnet 4.6</strong></td><td>~98% of Opus quality at 40% less. The rational default. Fallback: <strong>MAI-Code-1-Flash</strong> / <strong>Haiku 4.5</strong>.</td></tr>
+    <tr><td>Hardest agentic work &mdash; multi-file refactor, long autonomous debug, computer use</td><td><strong>GPT-5.5</strong> or <strong>Claude Opus 4.8</strong></td><td>Top agentic accuracy &amp; long-horizon reasoning. Fallback: <strong>GPT-5.4</strong> / <strong>Sonnet 4.6</strong>.</td></tr>
+    <tr><td>Repo-wide migration, screenshot&rarr;code, multi-day autonomous task</td><td><strong>Claude Fable 5</strong></td><td>Most capable GA model (95% SWE-bench Verified). Overkill &amp; pricey otherwise &mdash; fallback: <strong>Opus 4.8</strong>.</td></tr>
+    <tr><td>Terminal / CLI agent loops, tool-orchestrated coding</td><td><strong>GPT-5.3-Codex</strong></td><td>Copilot's agentic default; 25% faster, cheaper input than GPT-5.4. Fallback: <strong>MAI-Code-1-Flash</strong>.</td></tr>
+    <tr><td>Huge context (&gt;128K), abstract reasoning, multimodal docs</td><td><strong>Gemini 3.1 Pro</strong></td><td>Best long-context recall; 2M window. For coding/agents at lower cost: <strong>Gemini 3.5 Flash</strong>.</td></tr>
+    <tr><td>Fast multimodal (image/video/audio/PDF) + parallel agents</td><td><strong>Gemini 3.5 Flash</strong></td><td>Beats last-gen Pro on agentic coding, 4&times; faster. Cheaper still: <strong>Gemini 3 Flash</strong>.</td></tr>
+    <tr><td>Simple/cheap/high-volume &mdash; explain code, boilerplate, classify, route</td><td><strong>GPT-5.4 nano</strong> / <strong>Haiku 4.5</strong> / <strong>Raptor mini</strong></td><td>Lowest cost per call; don't pay flagship rates for trivial work.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ FULL MATRIX ============ -->
+<h2>2. Full model matrix &mdash; price, strength, and budget swap</h2>
+<p class="legend">
+  <span><span class="tier t-flag">FLAGSHIP</span> top capability</span>
+  <span><span class="tier t-work">WORKHORSE</span> daily driver</span>
+  <span><span class="tier t-spec">SPECIALIST</span> niche strength</span>
+  <span><span class="tier t-budget">BUDGET</span> cheap &amp; fast</span>
+  <span>Prices = USD per 1M tokens.</span>
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th><th>Tier</th>
+      <th class="num">In</th><th class="num">Cached</th><th class="num">Out</th>
+      <th>Best at</th><th>Cheaper near-equal</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- OpenAI -->
+    <tr><td colspan="7" class="fam">OpenAI &mdash; GPT</td></tr>
+    <tr><td><strong>GPT-5.5</strong></td><td><span class="tier t-flag">FLAGSHIP</span></td><td class="num">$5.00</td><td class="num">$0.50</td><td class="num">$30.00</td><td>Strongest agentic coding; tool coordination, computer use, 20-hr-class long-horizon tasks</td><td>GPT-5.4 (general) / GPT-5.3-Codex (agentic)</td></tr>
+    <tr><td><strong>GPT-5.4</strong> <span class="muted">(default &le;272K)</span></td><td><span class="tier t-work">WORKHORSE</span></td><td class="num">$2.50</td><td class="num">$0.25</td><td class="num">$15.00</td><td>Strong general-purpose reasoning &amp; coding; prior flagship default</td><td>GPT-5.4 mini / GPT-5.3-Codex</td></tr>
+    <tr><td>GPT-5.4 <span class="muted">(long &gt;272K)</span></td><td><span class="tier t-flag">FLAGSHIP</span></td><td class="num">$5.00</td><td class="num">$0.50</td><td class="num">$22.50</td><td>GPT-5.4 quality over very large prompts</td><td>Gemini 3.1 Pro (long-context value)</td></tr>
+    <tr><td><strong>GPT-5.3-Codex</strong></td><td><span class="tier t-spec">SPECIALIST</span></td><td class="num">$1.75</td><td class="num">$0.18</td><td class="num">$14.00</td><td>Agentic coding default: terminal/CLI, multi-file edits, tool orchestration, 25% faster</td><td>MAI-Code-1-Flash / Raptor mini</td></tr>
+    <tr><td>GPT-5.4 mini</td><td><span class="tier t-budget">BUDGET</span></td><td class="num">$0.75</td><td class="num">$0.08</td><td class="num">$4.50</td><td>Cheaper everyday coding &amp; chat with solid reasoning</td><td>GPT-5.4 nano / Gemini 3 Flash</td></tr>
+    <tr><td>GPT-5 mini</td><td><span class="tier t-budget">BUDGET</span></td><td class="num">$0.25</td><td class="num">$0.03</td><td class="num">$2.00</td><td>Low-cost general assistant for light tasks</td><td>GPT-5.4 nano</td></tr>
+    <tr><td>GPT-5.4 nano</td><td><span class="tier t-budget">BUDGET</span></td><td class="num">$0.20</td><td class="num">$0.02</td><td class="num">$1.25</td><td>Cheapest OpenAI option: classify, autocomplete-style, high-volume</td><td>&mdash; (floor)</td></tr>
+    <tr><td>GPT-5.5 <span class="muted">(long &gt;272K)</span></td><td><span class="tier t-flag">FLAGSHIP</span></td><td class="num">$10.00</td><td class="num">$1.00</td><td class="num">$45.00</td><td>Top agentic quality at extreme context; most expensive OpenAI tier</td><td>GPT-5.5 default / Gemini 3.1 Pro long</td></tr>
+
+    <!-- Anthropic -->
+    <tr><td colspan="7" class="fam">Anthropic &mdash; Claude</td></tr>
+    <tr><td><strong>Claude Fable 5</strong></td><td><span class="tier t-flag">FLAGSHIP</span></td><td class="num">$10.00</td><td class="num">$1.00</td><td class="num">$50.00</td><td>Most capable GA model: repo-wide migrations, multi-day autonomy, screenshot&rarr;code, finance/doc reasoning (95% SWE-bench Verified)</td><td>Claude Opus 4.8</td></tr>
+    <tr><td><strong>Claude Opus 4.8</strong></td><td><span class="tier t-flag">FLAGSHIP</span></td><td class="num">$5.00</td><td class="num">$0.50</td><td class="num">$25.00</td><td>Deep reasoning, architectural refactors, subtle concurrency bugs, high-autonomy agents (88.6% SWE-bench)</td><td>Claude Sonnet 4.6</td></tr>
+    <tr><td><strong>Claude Sonnet 4.6</strong></td><td><span class="tier t-work">WORKHORSE</span></td><td class="num">$3.00</td><td class="num">$0.30</td><td class="num">$15.00</td><td>The 80% of SWE work: features, fixes, tests, review. ~98% of Opus at the cost (79.6% SWE-bench)</td><td>Haiku 4.5 / MAI-Code-1-Flash</td></tr>
+    <tr><td>Claude Sonnet 4.5 / 4</td><td><span class="tier t-work">WORKHORSE</span></td><td class="num">$3.00</td><td class="num">$0.30</td><td class="num">$15.00</td><td>Prior Sonnet generations; same price &mdash; prefer 4.6 unless pinned</td><td>Haiku 4.5</td></tr>
+    <tr><td><strong>Claude Haiku 4.5</strong></td><td><span class="tier t-budget">BUDGET</span></td><td class="num">$1.00</td><td class="num">$0.10</td><td class="num">$5.00</td><td>Fast cheap tier: code explanation, boilerplate, simple fixes, routing/sub-agents (73.3% SWE-bench)</td><td>MAI-Code-1-Flash / Raptor mini</td></tr>
+    <tr><td>Claude Opus 4.5 / 4.6 / 4.7</td><td><span class="tier t-flag">FLAGSHIP</span></td><td class="num">$5.00</td><td class="num">$0.50</td><td class="num">$25.00</td><td>Earlier Opus generations; same price &mdash; prefer 4.8 unless pinned</td><td>Claude Sonnet 4.6</td></tr>
+
+    <!-- Google -->
+    <tr><td colspan="7" class="fam">Google &mdash; Gemini</td></tr>
+    <tr><td><strong>Gemini 3.1 Pro</strong> <span class="muted">(&le;200K)</span></td><td><span class="tier t-spec">SPECIALIST</span></td><td class="num">$2.00</td><td class="num">$0.20</td><td class="num">$12.00</td><td>Best long-context recall (&gt;128K), abstract reasoning, multimodal; up to 2M window</td><td>Gemini 3.5 Flash</td></tr>
+    <tr><td>Gemini 3.1 Pro <span class="muted">(long &gt;200K)</span></td><td><span class="tier t-spec">SPECIALIST</span></td><td class="num">$4.00</td><td class="num">$0.40</td><td class="num">$18.00</td><td>Pro reasoning across huge documents/codebases</td><td>Gemini 3.1 Pro default</td></tr>
+    <tr><td><strong>Gemini 3.5 Flash</strong></td><td><span class="tier t-work">WORKHORSE</span></td><td class="num">$1.50</td><td class="num">$0.15</td><td class="num">$9.00</td><td>Fast agentic coding (beats last-gen Pro), 4&times; throughput, full multimodal (image/video/audio/PDF), parallel agents</td><td>Gemini 3 Flash</td></tr>
+    <tr><td>Gemini 3 Flash</td><td><span class="tier t-budget">BUDGET</span></td><td class="num">$0.50</td><td class="num">$0.05</td><td class="num">$3.00</td><td>Cheap fast multimodal for everyday &amp; high-volume tasks</td><td>&mdash; (Gemini floor)</td></tr>
+    <tr><td>Gemini 2.5 Pro</td><td><span class="tier t-spec">SPECIALIST</span></td><td class="num">$1.25</td><td class="num">$0.13</td><td class="num">$10.00</td><td>Older Pro; still capable long-context/multimodal at lower input cost</td><td>Gemini 3.5 Flash</td></tr>
+
+    <!-- Specialist small -->
+    <tr><td colspan="7" class="fam">Code-tuned small models</td></tr>
+    <tr><td><strong>MAI-Code-1-Flash</strong> <span class="muted">(Microsoft)</span></td><td><span class="tier t-budget">BUDGET</span></td><td class="num">$0.75</td><td class="num">$0.08</td><td class="num">$4.50</td><td>5B agentic coder trained on the Copilot harness; beats Haiku 4.5 on coding (+16 pts SWE-bench Pro) using ~60% fewer tokens</td><td>Raptor mini</td></tr>
+    <tr><td><strong>Raptor mini</strong> <span class="muted">(GitHub)</span></td><td><span class="tier t-budget">BUDGET</span></td><td class="num">$0.25</td><td class="num">$0.03</td><td class="num">$2.00</td><td>Small code-aware model: multi-file edits, refactors, ~264K workspace context; on Free/Pro plans</td><td>&mdash; (cost floor)</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ STRENGTH / AVOID CARDS ============ -->
+<h2>3. Strong-at vs. don't-pay-for &mdash; per model</h2>
+<p class="sub">Each card: what the model earns its price on, and where a cheaper model does the same job.</p>
+
+<div class="fam">OpenAI &mdash; GPT</div>
+<div class="grid">
+  <div class="card">
+    <h3>GPT-5.5 <span class="tier t-flag">FLAGSHIP</span></h3>
+    <div class="price">$5 in / $30 out &mdash; $10 / $45 long-context</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Hardest agentic loops: multi-file refactors, long debug sessions, computer-use</li>
+    <li class="good">Verifying its own work over 20-hour-class tasks; fewer retries</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Routine edits &amp; chat &mdash; <strong>GPT-5.4</strong> is ~half the output cost</li>
+    <li class="bad">Pure terminal/tool coding &mdash; <strong>GPT-5.3-Codex</strong> is far cheaper</li></ul>
+  </div>
+  <div class="card">
+    <h3>GPT-5.4 <span class="tier t-work">WORKHORSE</span></h3>
+    <div class="price">$2.50 in / $15 out (default)</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Strong all-round reasoning + coding default</li>
+    <li class="good">Balanced quality/price for mixed daily work</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Simple/bulk tasks &mdash; drop to <strong>GPT-5.4 mini/nano</strong></li>
+    <li class="bad">Agent tool loops &mdash; <strong>GPT-5.3-Codex</strong> cheaper &amp; faster</li></ul>
+  </div>
+  <div class="card">
+    <h3>GPT-5.3-Codex <span class="tier t-spec">SPECIALIST</span></h3>
+    <div class="price">$1.75 in / $14 out</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Copilot's agentic default: terminal/CLI, build systems, multi-file</li>
+    <li class="good">Tool orchestration &amp; long-running workflows, 25% faster</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Light single-file help &mdash; <strong>MAI-Code-1-Flash</strong>/<strong>Raptor mini</strong> suffice</li>
+    <li class="bad">Non-coding chat/writing &mdash; use a general model</li></ul>
+  </div>
+  <div class="card">
+    <h3>GPT-5.4 mini / nano / GPT-5 mini <span class="tier t-budget">BUDGET</span></h3>
+    <div class="price">nano $0.20/$1.25 &middot; mini $0.75/$4.50</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">High-volume, latency-sensitive, cheap calls</li>
+    <li class="good">Classify, summarize, simple edits, autocomplete-style</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Nothing cheaper in-family &mdash; but don't expect deep reasoning; escalate to <strong>GPT-5.4</strong> when it stalls</li></ul>
+  </div>
+</div>
+
+<div class="fam">Anthropic &mdash; Claude</div>
+<div class="grid">
+  <div class="card">
+    <h3>Claude Fable 5 <span class="tier t-flag">FLAGSHIP</span></h3>
+    <div class="price">$10 in / $50 out &mdash; priciest model</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Repo-wide migrations &amp; multi-day autonomous sessions (a 2-month job in a day)</li>
+    <li class="good">Screenshot&rarr;working code; figure/chart/table reasoning; senior-level analysis</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Simple tasks, general writing, high-volume &mdash; <strong>Opus 4.8</strong> is "excellent value" instead</li>
+    <li class="bad">Anything Sonnet already handles &mdash; 3&times; Sonnet's output cost</li></ul>
+  </div>
+  <div class="card">
+    <h3>Claude Opus 4.8 <span class="tier t-flag">FLAGSHIP</span></h3>
+    <div class="price">$5 in / $25 out</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Complex architectural refactors, subtle concurrency/race bugs</li>
+    <li class="good">High-autonomy agents needing the deepest reasoning (the hard 10-15%)</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Day-to-day coding &mdash; <strong>Sonnet 4.6</strong> hits ~98% for 40% less</li></ul>
+  </div>
+  <div class="card">
+    <h3>Claude Sonnet 4.6 <span class="tier t-work">WORKHORSE</span></h3>
+    <div class="price">$3 in / $15 out</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">The rational primary for ~80% of engineering: features, fixes, tests, review, docs</li>
+    <li class="good">Near-Opus SWE-bench at far lower cost</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Trivial explain/boilerplate &mdash; <strong>Haiku 4.5</strong> or <strong>MAI-Code-1-Flash</strong></li>
+    <li class="bad">Deepest reasoning &mdash; escalate to <strong>Opus 4.8</strong> only when it stalls</li></ul>
+  </div>
+  <div class="card">
+    <h3>Claude Haiku 4.5 <span class="tier t-budget">BUDGET</span></h3>
+    <div class="price">$1 in / $5 out</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Fast cheap tier: code explanation, boilerplate, simple bug fixes</li>
+    <li class="good">Routing &amp; sub-agent fan-out in a tiered setup</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Real software engineering &mdash; lacks reasoning depth; use <strong>Sonnet 4.6</strong></li>
+    <li class="bad">Agentic coding specifically &mdash; <strong>MAI-Code-1-Flash</strong> beats it for less</li></ul>
+  </div>
+</div>
+
+<div class="fam">Google &mdash; Gemini</div>
+<div class="grid">
+  <div class="card">
+    <h3>Gemini 3.1 Pro <span class="tier t-spec">SPECIALIST</span></h3>
+    <div class="price">$2 in / $12 out &mdash; $4 / $18 long</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Long-context recall above 128K (84.9% MRCR); up to 2M-token window</li>
+    <li class="good">Abstract reasoning &amp; multimodal documents</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Agentic/coding-leaning work &mdash; <strong>Gemini 3.5 Flash</strong> beats it for ~25% less</li></ul>
+  </div>
+  <div class="card">
+    <h3>Gemini 3.5 Flash <span class="tier t-work">WORKHORSE</span></h3>
+    <div class="price">$1.50 in / $9 out</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Fast agentic coding (Terminal-Bench 76.2%), 4&times; throughput</li>
+    <li class="good">Full multimodal (image/video/audio/PDF), parallel agent loops, 1M context</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Cheap bulk multimodal &mdash; <strong>Gemini 3 Flash</strong> is 3&times; cheaper out</li>
+    <li class="bad">Recall above 128K &mdash; <strong>Gemini 3.1 Pro</strong> wins there</li></ul>
+  </div>
+  <div class="card">
+    <h3>Gemini 3 Flash <span class="tier t-budget">BUDGET</span></h3>
+    <div class="price">$0.50 in / $3 out</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Cheapest fast multimodal; high-volume everyday tasks</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Frontier coding/agents &mdash; step up to <strong>3.5 Flash</strong> when quality matters</li></ul>
+  </div>
+  <div class="card">
+    <h3>Gemini 2.5 Pro <span class="tier t-spec">SPECIALIST</span></h3>
+    <div class="price">$1.25 in / $10 out</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Older Pro; capable long-context/multimodal at low input cost</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">New work &mdash; <strong>Gemini 3.5 Flash</strong> is newer, faster, cheaper out</li></ul>
+  </div>
+</div>
+
+<div class="fam">Code-tuned small models</div>
+<div class="grid">
+  <div class="card">
+    <h3>MAI-Code-1-Flash <span class="tier t-budget">BUDGET</span></h3>
+    <div class="price">$0.75 in / $4.50 out &mdash; Microsoft, 5B</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Inference-efficient agentic coding trained directly on the Copilot harness</li>
+    <li class="good">Beats Haiku 4.5 on coding (+16 pts SWE-bench Pro) with ~60% fewer tokens</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Deep architectural reasoning &mdash; escalate to <strong>Sonnet 4.6</strong>/<strong>Opus 4.8</strong></li></ul>
+  </div>
+  <div class="card">
+    <h3>Raptor mini <span class="tier t-budget">BUDGET</span></h3>
+    <div class="price">$0.25 in / $2 out &mdash; GitHub, Free/Pro</div>
+    <div class="lbl g">Strong at</div>
+    <ul><li class="good">Small code-aware model: multi-file edits, large refactors, tool automation</li>
+    <li class="good">~264K context to read whole folders/modules; cheapest code tier</li></ul>
+    <div class="lbl b">Don't pay for</div>
+    <ul><li class="bad">Complex reasoning/novel architecture &mdash; use a flagship</li></ul>
+  </div>
+</div>
+
+<!-- ============ BUDGET SWAP MATRIX ============ -->
+<h2>4. Budget-swap matrix &mdash; "almost as good, for less"</h2>
+<p class="sub">When the premium model is more than the job needs, drop to its near-equal. Savings shown on the output rate (the cost that dominates).</p>
+<table class="swap">
+  <thead><tr><th>Premium model</th><th class="num">Out $/M</th><th></th><th>Budget swap</th><th class="num">Out $/M</th><th>Output saving</th><th>Use the swap when&hellip;</th></tr></thead>
+  <tbody>
+    <tr><td>Claude Fable 5</td><td class="num">$50</td><td class="arrow">&rarr;</td><td>Claude Opus 4.8</td><td class="num">$25</td><td class="save">50% cheaper</td><td>It isn't a repo-wide migration or multi-day run</td></tr>
+    <tr><td>Claude Opus 4.8</td><td class="num">$25</td><td class="arrow">&rarr;</td><td>Claude Sonnet 4.6</td><td class="num">$15</td><td class="save">40% cheaper</td><td>It's normal feature/bug/test work (~98% quality)</td></tr>
+    <tr><td>Claude Sonnet 4.6</td><td class="num">$15</td><td class="arrow">&rarr;</td><td>MAI-Code-1-Flash</td><td class="num">$4.50</td><td class="save">70% cheaper</td><td>Task is straightforward agentic coding</td></tr>
+    <tr><td>GPT-5.5</td><td class="num">$30</td><td class="arrow">&rarr;</td><td>GPT-5.4</td><td class="num">$15</td><td class="save">50% cheaper</td><td>You don't need the very top agentic tier</td></tr>
+    <tr><td>GPT-5.4</td><td class="num">$15</td><td class="arrow">&rarr;</td><td>GPT-5.3-Codex</td><td class="num">$14</td><td class="save">+ faster, lower input</td><td>Work is tool/terminal-driven coding</td></tr>
+    <tr><td>GPT-5.3-Codex</td><td class="num">$14</td><td class="arrow">&rarr;</td><td>MAI-Code-1-Flash</td><td class="num">$4.50</td><td class="save">68% cheaper</td><td>Smaller, well-scoped agentic edits</td></tr>
+    <tr><td>GPT-5.4 mini</td><td class="num">$4.50</td><td class="arrow">&rarr;</td><td>GPT-5.4 nano</td><td class="num">$1.25</td><td class="save">72% cheaper</td><td>Classify / summarize / very simple edits</td></tr>
+    <tr><td>Gemini 3.1 Pro</td><td class="num">$12</td><td class="arrow">&rarr;</td><td>Gemini 3.5 Flash</td><td class="num">$9</td><td class="save">25% + faster</td><td>Coding/agents, &amp; you don't need &gt;128K recall</td></tr>
+    <tr><td>Gemini 3.5 Flash</td><td class="num">$9</td><td class="arrow">&rarr;</td><td>Gemini 3 Flash</td><td class="num">$3</td><td class="save">67% cheaper</td><td>Bulk/simple multimodal &amp; everyday tasks</td></tr>
+    <tr><td>Claude Haiku 4.5</td><td class="num">$5</td><td class="arrow">&rarr;</td><td>Raptor mini</td><td class="num">$2</td><td class="save">60% cheaper</td><td>Code-specific small tasks on Free/Pro</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>The one rule that saves the most money:</strong> tier your routing. Send simple work to a <em>budget</em> model, let a <em>workhorse</em> (Sonnet 4.6 / Gemini 3.5 Flash / GPT-5.4) handle the ~80% middle, and reserve <em>flagships</em> (Fable 5, Opus 4.8, GPT-5.5) for the hard 10-15% that genuinely needs them. Reported to cut total spend 60-70% versus running a flagship for everything &mdash; and remember completions stay free regardless.
+</div>
+
+<!-- ============ INTERACTIVE EXPLORER ============ -->
+<h2>5. Interactive model explorer</h2>
+<p class="sub">Prefer to drive it yourself? Filter the same 21 models by provider, tier, or what you're trying to do &mdash; then click any card for full cost &amp; guidance.</p>
+
+<div id="explorer">
+  <div class="panel">
+    <div class="frow"><span class="flabel">Use case</span><span id="ucFilters"></span></div>
+    <div class="frow"><span class="flabel">Provider</span><span id="provFilters"></span></div>
+    <div class="frow"><span class="flabel">Tier</span><span id="tierFilters"></span></div>
+    <div class="controls">
+      <span class="count"><span id="count">0</span> models shown</span>
+      <label>Sort:
+        <select id="sort">
+          <option value="fit">Best fit first</option>
+          <option value="cheap">Cheapest first (output $)</option>
+          <option value="dear">Most capable first</option>
+          <option value="name">Name</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="legacy"> Show older generations</label>
+      <button class="reset" id="reset">Reset filters</button>
+    </div>
+  </div>
+
+  <p class="ucbar" id="ucbar"></p>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">No models match these filters. Try removing a tier or provider.</div>
+
+  <!-- modal -->
+  <div class="backdrop" id="backdrop">
+    <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+  </div>
+</div>
+
+<!-- ============ MODEL-TYPE PRIMER ============ -->
+<h2>6. Model types &mdash; a 60-second primer</h2>
+<p class="sub">Before "which model," it helps to know "which <em>kind</em> of model." These six archetypes are the stable categories &mdash; names and versions change, but the jobs they're built for don't. Most real models wear two hats (Gemini 3.5 Flash is a workhorse <em>and</em> multimodal; Fable 5 reasons <em>and</em> sees), so treat these as lenses, not rigid boxes.</p>
+<div class="grid">
+
+  <div class="card">
+    <h3>🧠 Reasoning / frontier</h3>
+    <p class="muted" style="font-size:13px; margin:2px 0 0">Think hardest before answering &mdash; they plan, self-check, and grind through long, ambiguous problems on their own.</p>
+    <div class="lbl g">Use for</div>
+    <ul><li class="good">Novel architecture, subtle/concurrency bugs, repo-wide migrations</li>
+    <li class="good">Long autonomous tasks where being wrong is expensive</li></ul>
+    <div class="lbl b">Skip for</div>
+    <ul><li class="bad">Simple edits, boilerplate, high-volume work &mdash; slow &amp; costly; you pay for thinking you don't need</li></ul>
+    <p class="muted" style="font-size:12px; margin:9px 0 0"><strong>Here:</strong> GPT-5.5 · Claude Opus 4.8 · Claude Fable 5</p>
+  </div>
+
+  <div class="card">
+    <h3>🐎 Balanced / workhorse</h3>
+    <p class="muted" style="font-size:13px; margin:2px 0 0">Strong all-rounders that deliver most of a frontier model's quality at a fraction of the cost.</p>
+    <div class="lbl g">Use for</div>
+    <ul><li class="good">The daily 80%: features, bug fixes, tests, code review, refactors</li>
+    <li class="good">Your sensible default when in doubt</li></ul>
+    <div class="lbl b">Skip for</div>
+    <ul><li class="bad">Trivial throwaway tasks (overkill) or the hardest 10&ndash;15% (under-powered &mdash; escalate to a reasoning model)</li></ul>
+    <p class="muted" style="font-size:12px; margin:9px 0 0"><strong>Here:</strong> Claude Sonnet 4.6 · GPT-5.4 · Gemini 3.5 Flash</p>
+  </div>
+
+  <div class="card">
+    <h3>🤖 Agentic / coding-tuned</h3>
+    <p class="muted" style="font-size:13px; margin:2px 0 0">Trained to use tools, drive a terminal, and edit across many files in an iterative loop &mdash; built for agent mode.</p>
+    <div class="lbl g">Use for</div>
+    <ul><li class="good">CLI automation, multi-file implementation from a spec, tool orchestration</li>
+    <li class="good">"Go do this whole task" delegated work</li></ul>
+    <div class="lbl b">Skip for</div>
+    <ul><li class="bad">Open-ended writing/analysis or deep conceptual reasoning beyond code</li></ul>
+    <p class="muted" style="font-size:12px; margin:9px 0 0"><strong>Here:</strong> GPT-5.3-Codex · MAI-Code-1-Flash · Raptor mini</p>
+  </div>
+
+  <div class="card">
+    <h3>⚡ Fast / small / budget</h3>
+    <p class="muted" style="font-size:13px; margin:2px 0 0">Lightweight and cheap &mdash; answer quickly with limited depth.</p>
+    <div class="lbl g">Use for</div>
+    <ul><li class="good">Explanations, summaries, classification, boilerplate, quick Q&amp;A</li>
+    <li class="good">High-volume batch jobs and routing/triage</li></ul>
+    <div class="lbl b">Skip for</div>
+    <ul><li class="bad">Complex logic or architecture &mdash; they stall or hallucinate; escalate the moment they get it wrong twice</li></ul>
+    <p class="muted" style="font-size:12px; margin:9px 0 0"><strong>Here:</strong> Claude Haiku 4.5 · GPT-5.4 mini/nano · GPT-5 mini · Gemini 3 Flash</p>
+  </div>
+
+  <div class="card">
+    <h3>📚 Long-context</h3>
+    <p class="muted" style="font-size:13px; margin:2px 0 0">Hold and recall very large inputs &mdash; hundreds of thousands to millions of tokens at once.</p>
+    <div class="lbl g">Use for</div>
+    <ul><li class="good">Whole-repo analysis, large documents, long logs/transcripts</li>
+    <li class="good">Questions that span far more than a few files</li></ul>
+    <div class="lbl b">Skip for</div>
+    <ul><li class="bad">Short prompts &mdash; you pay a premium (and a surcharge cliff) for capacity you aren't using</li></ul>
+    <p class="muted" style="font-size:12px; margin:9px 0 0"><strong>Here:</strong> Gemini 3.1 Pro · Gemini 2.5 Pro · (1M modes of Sonnet / GPT-5.x)</p>
+  </div>
+
+  <div class="card">
+    <h3>🖼️ Multimodal</h3>
+    <p class="muted" style="font-size:13px; margin:2px 0 0">Understand images, video, audio, and PDFs &mdash; not just text.</p>
+    <div class="lbl g">Use for</div>
+    <ul><li class="good">Screenshot→code, UI-from-mockup, reading diagrams/charts/tables</li>
+    <li class="good">Extracting data from documents and figures</li></ul>
+    <div class="lbl b">Skip for</div>
+    <ul><li class="bad">Plain-text coding &mdash; a text-only model is usually cheaper and just as good</li></ul>
+    <p class="muted" style="font-size:12px; margin:9px 0 0"><strong>Here:</strong> Gemini 3.5 Flash · Gemini 3.1 Pro · Claude Fable 5 (vision)</p>
+  </div>
+
+</div>
+<div class="note">
+  <strong>Bonus type &mdash; completion (FIM) models.</strong> The ghost-text autocomplete and next-edit suggestions in your editor run on a separate, code-specialized "fill-in-the-middle" model. You don't pick it and it's <strong>never billed</strong> on paid plans &mdash; so lean on it freely for the mechanical typing, and save the chat/agent models above for the thinking.
+</div>
+
+<footer>
+  <strong>Sources.</strong> Pricing &amp; model lineup: GitHub Docs &mdash;
+  <a href="https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing">Models and pricing</a>,
+  <a href="https://docs.github.com/en/copilot/reference/ai-models/supported-models">Supported models</a>.
+  Capability research:
+  <a href="https://openai.com/index/introducing-gpt-5-5/">OpenAI GPT-5.5</a>,
+  <a href="https://github.blog/changelog/2026-02-09-gpt-5-3-codex-is-now-generally-available-for-github-copilot/">GitHub Changelog: GPT-5.3-Codex</a>,
+  <a href="https://www.anthropic.com/news/claude-fable-5-mythos-5">Anthropic: Claude Fable 5</a>,
+  <a href="https://claude.com/resources/tutorials/choosing-the-right-claude-model">Anthropic: choosing a Claude model</a>,
+  <a href="https://deepmind.google/models/model-cards/gemini-3-5-flash/">Google DeepMind: Gemini 3.5 Flash</a>,
+  <a href="https://github.blog/changelog/2026-06-02-mai-code-1-flash-is-now-available-for-github-copilot/">GitHub Changelog: MAI-Code-1-Flash</a>,
+  <a href="https://github.blog/changelog/2025-11-10-raptor-mini-is-rolling-out-in-public-preview-for-github-copilot/">GitHub Changelog: Raptor mini</a>.
+  <br>Prices are USD per 1M tokens from GitHub's per-token overage table (1 AI credit = $0.01). Benchmark figures are vendor/third-party reported and move quickly &mdash; verify before high-stakes decisions. Compiled June 2026.
+</footer>
+
+</div>
+
+<script>
+// ---------- use-case dictionary ----------
+const USE_CASES = {
+  everyday:  "Everyday coding — features, bug fixes, tests, code review",
+  agentic:   "Agentic / terminal — multi-file edits, CLI, tool orchestration",
+  reasoning: "Deep reasoning & hard debugging — architecture, concurrency bugs",
+  migration: "Repo-wide migration & long autonomous sessions",
+  longctx:   "Long context (>128K) & large-codebase analysis",
+  multimodal:"Multimodal — image, video, audio, PDF, screenshot→code",
+  simple:    "Simple / high-volume / cheap — classify, summarize, autocomplete",
+  docs:      "Docs, explanation & boilerplate"
+};
+
+// ---------- model data ----------
+// fit: best | good | ok   |   prices per 1M tokens
+const MODELS = [
+  // OpenAI
+  { name:"GPT-5.5", prov:"OpenAI", tier:"flagship", in:5, cached:.5, out:30,
+    best:"Strongest agentic coding; tool coordination, computer use, 20-hr-class long-horizon tasks.",
+    fits:{agentic:"best", reasoning:"best", longctx:"good", everyday:"good"},
+    strong:["Hardest agentic loops: multi-file refactors, long debug sessions, computer use","Verifies its own work over very long tasks; fewer retries"],
+    avoid:["Routine edits & chat — GPT-5.4 is ~half the output cost","Pure terminal/tool coding — GPT-5.3-Codex is far cheaper"],
+    alt:"GPT-5.4", altnote:"general work", priceNote:"$10 / $45 in the long-context tier (>272K)." },
+  { name:"GPT-5.4", prov:"OpenAI", tier:"workhorse", in:2.5, cached:.25, out:15,
+    best:"Strong general-purpose reasoning & coding; the prior flagship default.",
+    fits:{everyday:"best", agentic:"good", reasoning:"good", docs:"good"},
+    strong:["Balanced quality/price for mixed daily work","Solid all-round reasoning + coding default"],
+    avoid:["Simple/bulk tasks — drop to GPT-5.4 mini/nano","Agent tool loops — GPT-5.3-Codex is cheaper & faster"],
+    alt:"GPT-5.4 mini", altnote:"lighter work", priceNote:"$5 / $22.50 in the long-context tier (>272K)." },
+  { name:"GPT-5.3-Codex", prov:"OpenAI", tier:"specialist", in:1.75, cached:.18, out:14,
+    best:"Copilot's agentic coding default: terminal/CLI, multi-file edits, tool orchestration — 25% faster.",
+    fits:{agentic:"best", everyday:"good", reasoning:"ok"},
+    strong:["Terminal & CLI agent loops, build systems, package management","Tool orchestration across long-running workflows"],
+    avoid:["Light single-file help — MAI-Code-1-Flash / Raptor mini suffice","Non-coding chat or writing — use a general model"],
+    alt:"MAI-Code-1-Flash", altnote:"smaller agentic edits" },
+  { name:"GPT-5.4 mini", prov:"OpenAI", tier:"budget", in:.75, cached:.075, out:4.5,
+    best:"Cheaper everyday coding & chat with solid reasoning.",
+    fits:{everyday:"good", simple:"best", docs:"good", agentic:"ok"},
+    strong:["Good price/quality for routine edits and Q&A","Fast enough for interactive chat"],
+    avoid:["Trivial classify/summarize — GPT-5.4 nano is cheaper","Hard reasoning — escalate to GPT-5.4"],
+    alt:"GPT-5.4 nano", altnote:"trivial tasks" },
+  { name:"GPT-5 mini", prov:"OpenAI", tier:"budget", in:.25, cached:.025, out:2,
+    best:"Low-cost general assistant for light tasks and quick Q&A.",
+    fits:{simple:"best", docs:"good", everyday:"ok"},
+    strong:["Cheap quick answers, explain-an-error, light edits"],
+    avoid:["Anything agentic or multi-step — step up to a coding model"],
+    alt:"GPT-5.4 nano", altnote:"cheapest" },
+  { name:"GPT-5.4 nano", prov:"OpenAI", tier:"budget", in:.20, cached:.02, out:1.25,
+    best:"Cheapest OpenAI option: classify, autocomplete-style, high-volume batch work.",
+    fits:{simple:"best", docs:"ok"},
+    strong:["Lowest cost per call in the GPT family","High-volume, latency-sensitive pipelines"],
+    avoid:["Don't expect real reasoning — escalate to GPT-5.4 when it stalls"],
+    alt:null },
+
+  // Anthropic
+  { name:"Claude Fable 5", prov:"Anthropic", tier:"flagship", in:10, cached:1, out:50,
+    best:"Most capable generally-available model: repo-wide migrations, multi-day autonomy, screenshot→code (95% SWE-bench Verified).",
+    fits:{migration:"best", reasoning:"best", multimodal:"good", agentic:"good"},
+    strong:["Repo-wide migrations & multi-day autonomous sessions (a 2-month job in a day)","Screenshot→working code; figure/chart/table reasoning; senior-level analysis"],
+    avoid:["Simple tasks, general writing, high-volume — Opus 4.8 is excellent value instead","Anything Sonnet already handles — 3× Sonnet's output cost"],
+    alt:"Claude Opus 4.8", altnote:"still very strong, half the cost", priceNote:"The single priciest model in the lineup." },
+  { name:"Claude Opus 4.8", prov:"Anthropic", tier:"flagship", in:5, cached:.5, out:25,
+    best:"Deep reasoning, architectural refactors, subtle concurrency bugs, high-autonomy agents (88.6% SWE-bench).",
+    fits:{reasoning:"best", agentic:"best", migration:"good", everyday:"good"},
+    strong:["Complex architectural refactors and subtle race/concurrency bugs","High-autonomy agents needing the deepest reasoning (the hard 10–15%)"],
+    avoid:["Day-to-day coding — Sonnet 4.6 hits ~98% for 40% less"],
+    alt:"Claude Sonnet 4.6", altnote:"~98% quality, 40% less" },
+  { name:"Claude Sonnet 4.6", prov:"Anthropic", tier:"workhorse", in:3, cached:.3, out:15,
+    best:"The rational primary for ~80% of engineering: features, fixes, tests, review (79.6% SWE-bench, ~98% of Opus).",
+    fits:{everyday:"best", agentic:"good", reasoning:"good", docs:"good"},
+    strong:["Features, fixes, tests, code review, documentation","Near-Opus quality at far lower cost"],
+    avoid:["Trivial explain/boilerplate — Haiku 4.5 or MAI-Code-1-Flash","Deepest reasoning — escalate to Opus 4.8 only when it stalls"],
+    alt:"MAI-Code-1-Flash", altnote:"straightforward coding" },
+  { name:"Claude Haiku 4.5", prov:"Anthropic", tier:"budget", in:1, cached:.1, out:5,
+    best:"Fast cheap tier: code explanation, boilerplate, simple fixes, routing/sub-agents (73.3% SWE-bench).",
+    fits:{simple:"best", docs:"best", everyday:"ok", agentic:"ok"},
+    strong:["Code explanation, boilerplate, simple bug fixes","Routing & sub-agent fan-out in a tiered setup"],
+    avoid:["Real software engineering — lacks reasoning depth; use Sonnet 4.6","Agentic coding specifically — MAI-Code-1-Flash beats it for less"],
+    alt:"MAI-Code-1-Flash", altnote:"cheaper agentic coding" },
+
+  // Google
+  { name:"Gemini 3.1 Pro", prov:"Google", tier:"specialist", in:2, cached:.2, out:12,
+    best:"Best long-context recall above 128K (84.9% MRCR) and abstract reasoning; up to a 2M-token window.",
+    fits:{longctx:"best", multimodal:"good", reasoning:"good", everyday:"ok"},
+    strong:["Long-context recall over very large documents/codebases","Abstract reasoning & multimodal documents"],
+    avoid:["Agentic/coding-leaning work — Gemini 3.5 Flash beats it for ~25% less"],
+    alt:"Gemini 3.5 Flash", altnote:"coding/agents, <128K", priceNote:"$4 / $18 in the long-context tier (>200K)." },
+  { name:"Gemini 3.5 Flash", prov:"Google", tier:"workhorse", in:1.5, cached:.15, out:9,
+    best:"Fast agentic coding (beats last-gen Pro), 4× throughput, full multimodal, parallel agent loops; 1M context.",
+    fits:{agentic:"best", multimodal:"best", everyday:"good", longctx:"good"},
+    strong:["Fast agentic coding (Terminal-Bench 76.2%), 4× output speed","Full multimodal (image/video/audio/PDF), parallel agents"],
+    avoid:["Cheap bulk multimodal — Gemini 3 Flash is 3× cheaper out","Recall above 128K — Gemini 3.1 Pro wins there"],
+    alt:"Gemini 3 Flash", altnote:"bulk/simple work" },
+  { name:"Gemini 3 Flash", prov:"Google", tier:"budget", in:.5, cached:.05, out:3,
+    best:"Cheapest fast multimodal for everyday & high-volume tasks.",
+    fits:{simple:"best", multimodal:"good", everyday:"ok"},
+    strong:["Low-cost fast multimodal","High-volume everyday tasks"],
+    avoid:["Frontier coding/agents — step up to 3.5 Flash when quality matters"],
+    alt:null },
+  { name:"Gemini 2.5 Pro", prov:"Google", tier:"specialist", in:1.25, cached:.125, out:10,
+    best:"Older Pro; still capable long-context & multimodal at a low input cost.",
+    fits:{longctx:"good", multimodal:"good", reasoning:"ok"},
+    strong:["Capable long-context/multimodal at low input price"],
+    avoid:["New work — Gemini 3.5 Flash is newer, faster, cheaper out"],
+    alt:"Gemini 3.5 Flash", altnote:"newer & faster", legacy:true },
+
+  // Microsoft / GitHub small code models
+  { name:"MAI-Code-1-Flash", prov:"Microsoft", tier:"budget", in:.75, cached:.075, out:4.5,
+    best:"5B agentic coder trained on the Copilot harness; beats Haiku 4.5 on coding (+16 pts SWE-bench Pro) using ~60% fewer tokens.",
+    fits:{agentic:"best", everyday:"good", simple:"good"},
+    strong:["Inference-efficient agentic coding tuned to Copilot's tools","Beats Haiku 4.5 on coding benchmarks for less"],
+    avoid:["Deep architectural reasoning — escalate to Sonnet 4.6 / Opus 4.8"],
+    alt:"Raptor mini", altnote:"cheapest code tier" },
+  { name:"Raptor mini", prov:"GitHub", tier:"budget", in:.25, cached:.025, out:2,
+    best:"Small code-aware model: multi-file edits, refactors, ~264K workspace context; available on Free/Pro plans.",
+    fits:{simple:"best", agentic:"good", everyday:"ok"},
+    strong:["Multi-file edits, large refactors, tool-assisted automation","~264K context to read whole folders/modules; cheapest code tier"],
+    avoid:["Complex reasoning or novel architecture — use a flagship"],
+    alt:null },
+
+  // ---- legacy generations (hidden by default) ----
+  { name:"Claude Sonnet 4.5", prov:"Anthropic", tier:"workhorse", in:3, cached:.3, out:15,
+    best:"Prior Sonnet generation — same price as 4.6; prefer 4.6 unless you're pinned to it.",
+    fits:{everyday:"good", agentic:"good", docs:"good"},
+    strong:["Solid general coding workhorse"], avoid:["Prefer Sonnet 4.6 at the same price"],
+    alt:"Claude Haiku 4.5", altnote:"lighter work", legacy:true },
+  { name:"Claude Sonnet 4", prov:"Anthropic", tier:"workhorse", in:3, cached:.3, out:15,
+    best:"Earlier Sonnet generation — same price as 4.6; prefer 4.6 unless pinned.",
+    fits:{everyday:"good", docs:"good"},
+    strong:["General coding workhorse"], avoid:["Prefer Sonnet 4.6 at the same price"],
+    alt:"Claude Haiku 4.5", altnote:"lighter work", legacy:true },
+  { name:"Claude Opus 4.7", prov:"Anthropic", tier:"flagship", in:5, cached:.5, out:25,
+    best:"Prior Opus generation — same price as 4.8; prefer 4.8 unless pinned.",
+    fits:{reasoning:"best", agentic:"good"},
+    strong:["Deep reasoning & complex refactors"], avoid:["Prefer Opus 4.8 at the same price","Day-to-day — Sonnet 4.6"],
+    alt:"Claude Sonnet 4.6", altnote:"daily work", legacy:true },
+  { name:"Claude Opus 4.6", prov:"Anthropic", tier:"flagship", in:5, cached:.5, out:25,
+    best:"Earlier Opus generation — same price as 4.8; prefer 4.8 unless pinned.",
+    fits:{reasoning:"best", agentic:"good"},
+    strong:["Deep reasoning & complex refactors"], avoid:["Prefer Opus 4.8 at the same price","Day-to-day — Sonnet 4.6"],
+    alt:"Claude Sonnet 4.6", altnote:"daily work", legacy:true },
+  { name:"Claude Opus 4.5", prov:"Anthropic", tier:"flagship", in:5, cached:.5, out:25,
+    best:"Earliest 4.x Opus — same price as 4.8; prefer 4.8 unless pinned.",
+    fits:{reasoning:"good", agentic:"good"},
+    strong:["Deep reasoning & complex refactors"], avoid:["Prefer Opus 4.8 at the same price","Day-to-day — Sonnet 4.6"],
+    alt:"Claude Sonnet 4.6", altnote:"daily work", legacy:true }
+];
+
+// ---------- providers & tiers ----------
+const PROVIDERS = ["OpenAI","Anthropic","Google","Microsoft","GitHub"];
+const TIERS = [["flagship","Flagship"],["workhorse","Workhorse"],["specialist","Specialist"],["budget","Budget"]];
+const TIER_RANK = {flagship:4, specialist:3, workhorse:2, budget:1};
+const FIT_RANK = {best:3, good:2, ok:1};
+
+// ---------- state ----------
+const state = { uc:null, prov:new Set(), tier:new Set(), sort:"fit", legacy:false };
+const $ = id => document.getElementById(id);
+
+// ---------- build filter chips ----------
+const ucWrap = $("ucFilters");
+Object.entries(USE_CASES).forEach(([k,label])=>{
+  const c = document.createElement("span");
+  c.className = "chip uc"; c.dataset.uc = k;
+  c.textContent = label.split(" — ")[0];
+  c.title = label;
+  c.onclick = ()=>{ state.uc = state.uc===k ? null : k; render(); };
+  ucWrap.appendChild(c);
+});
+const provWrap = $("provFilters");
+PROVIDERS.forEach(p=>{
+  const c=document.createElement("span"); c.className="chip"; c.textContent=p;
+  c.onclick=()=>{ toggle(state.prov,p); render(); };
+  provWrap.appendChild(c);
+});
+const tierWrap = $("tierFilters");
+TIERS.forEach(([k,label])=>{
+  const c=document.createElement("span"); c.className="chip"; c.dataset.tier=k;
+  c.innerHTML='<span class="dot tier t-'+k+'" style="padding:1px 5px">●</span>'+label;
+  c.onclick=()=>{ toggle(state.tier,k); render(); };
+  tierWrap.appendChild(c);
+});
+function toggle(set,v){ set.has(v)?set.delete(v):set.add(v); }
+
+$("sort").onchange = e=>{ state.sort=e.target.value; render(); };
+$("legacy").onchange = e=>{ state.legacy=e.target.checked; render(); };
+$("reset").onclick = ()=>{
+  state.uc=null; state.prov.clear(); state.tier.clear();
+  state.sort="fit"; $("sort").value="fit";
+  state.legacy=false; $("legacy").checked=false;
+  render();
+};
+
+// ---------- render ----------
+function fmt(n){ return "$"+ (Number.isInteger(n)? n : n.toFixed(2)); }
+
+function render(){
+  document.querySelectorAll("#ucFilters .chip").forEach(c=>c.classList.toggle("on", c.dataset.uc===state.uc));
+  document.querySelectorAll("#provFilters .chip").forEach(c=>c.classList.toggle("on", state.prov.has(c.textContent)));
+  document.querySelectorAll("#tierFilters .chip").forEach(c=>c.classList.toggle("on", state.tier.has(c.dataset.tier)));
+
+  let list = MODELS.filter(m=>{
+    if(m.legacy && !state.legacy) return false;
+    if(state.prov.size && !state.prov.has(m.prov)) return false;
+    if(state.tier.size && !state.tier.has(m.tier)) return false;
+    if(state.uc && !m.fits[state.uc]) return false;
+    return true;
+  });
+
+  list.sort((a,b)=>{
+    if(state.sort==="cheap") return a.out-b.out || a.name.localeCompare(b.name);
+    if(state.sort==="dear")  return b.out-a.out || a.name.localeCompare(b.name);
+    if(state.sort==="name")  return a.name.localeCompare(b.name);
+    if(state.uc){
+      const d=(FIT_RANK[b.fits[state.uc]]||0)-(FIT_RANK[a.fits[state.uc]]||0);
+      if(d) return d; return a.out-b.out;
+    }
+    return (TIER_RANK[b.tier]-TIER_RANK[a.tier]) || a.out-b.out;
+  });
+
+  const bar=$("ucbar");
+  bar.innerHTML = state.uc
+    ? "Showing models for <b>"+USE_CASES[state.uc]+"</b> &mdash; ranked by fit, then cost. Badge = how well it fits."
+    : "Tip: click a <b>use case</b> above to rank models by how well they fit, with cost.";
+
+  const grid=$("grid");
+  grid.innerHTML="";
+  list.forEach(m=>grid.appendChild(cardEl(m)));
+  $("count").textContent=list.length;
+  $("empty").style.display = list.length? "none":"block";
+}
+
+function cardEl(m){
+  const el=document.createElement("div");
+  el.className="mc"; el.onclick=()=>openModal(m);
+  const fit = state.uc ? m.fits[state.uc] : null;
+  el.innerHTML =
+    '<h3>'+m.name+
+      (m.legacy?' <span class="legacy-badge">older</span>':'')+
+      '<span class="tier t-'+m.tier+'">'+m.tier+'</span>'+
+      (fit?'<span class="fit fit-'+fit+'">'+fit.toUpperCase()+' FIT</span>':'')+
+    '</h3>'+
+    '<div class="prov">'+m.prov+'</div>'+
+    '<div class="price"><span>in <b>'+fmt(m.in)+'</b></span><span>cached <b>'+fmt(m.cached)+'</b></span><span>out <b>'+fmt(m.out)+'</b></span></div>'+
+    '<div class="best">'+m.best+'</div>'+
+    (m.alt?'<div class="swap">Cheaper near-equal: <b>'+m.alt+'</b>'+(m.altnote?' <span style="color:var(--muted)">('+m.altnote+')</span>':'')+'</div>':'');
+  return el;
+}
+
+// ---------- modal ----------
+const backdrop=$("backdrop"), modal=$("modal");
+function openModal(m){
+  const ucList = Object.entries(m.fits)
+    .sort((a,b)=>FIT_RANK[b[1]]-FIT_RANK[a[1]])
+    .map(([k,f])=>'<span class="ucpill '+f+'">'+USE_CASES[k].split(" — ")[0]+' · '+f+'</span>').join("");
+  modal.innerHTML =
+    '<button class="closex" aria-label="Close">&times;</button>'+
+    '<h2>'+m.name+' <span class="tier t-'+m.tier+'">'+m.tier+'</span></h2>'+
+    '<p class="mprov">'+m.prov+(m.legacy?' · older generation':'')+'</p>'+
+    '<p style="margin:0 0 6px">'+m.best+'</p>'+
+    '<table><thead><tr><th>Per 1M tokens</th><th>Input</th><th>Cached</th><th>Output</th></tr></thead>'+
+      '<tbody><tr><td>Price</td><td>'+fmt(m.in)+'</td><td>'+fmt(m.cached)+'</td><td>'+fmt(m.out)+'</td></tr></tbody></table>'+
+    (m.priceNote?'<p style="font-size:12.5px;color:var(--muted);margin:-8px 0 8px">'+m.priceNote+'</p>':'')+
+    '<div class="lbl">Good for</div><div class="ucpills">'+ucList+'</div>'+
+    '<div class="lbl g">Strong at</div><ul>'+m.strong.map(s=>'<li class="good">'+s+'</li>').join("")+'</ul>'+
+    '<div class="lbl b">Don\'t pay for</div><ul>'+m.avoid.map(s=>'<li class="bad">'+s+'</li>').join("")+'</ul>'+
+    (m.alt?'<div class="swapbox">Need it cheaper? Drop to <b>'+m.alt+'</b>'+(m.altnote?' — '+m.altnote:'')+'.</div>':'');
+  backdrop.classList.add("show");
+  modal.querySelector(".closex").onclick=closeModal;
+}
+function closeModal(){ backdrop.classList.remove("show"); }
+backdrop.onclick=e=>{ if(e.target===backdrop) closeModal(); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
+
+render();
+</script>
+</body>
+</html>

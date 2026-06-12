@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token-Reduction Skills &amp; Tools — Deep Research</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171a23; --panel2:#1e222e; --border:#2a2f3d;
+    --text:#e6e8ee; --muted:#9aa3b2; --accent:#7c9cff; --accent2:#5ad1a5;
+    --input:#7c9cff; --output:#ff9f6e; --context:#c08bff; --warn:#ffd166;
+    --chip:#232838;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;font-size:16px}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 22px 80px}
+  header.hero{border:1px solid var(--border);border-radius:16px;
+    background:linear-gradient(160deg,#1b2030,#141722);padding:34px 30px;margin-bottom:30px}
+  h1{margin:0 0 6px;font-size:30px;letter-spacing:-.5px}
+  .sub{color:var(--muted);font-size:15px;margin-bottom:18px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{background:var(--chip);border:1px solid var(--border);color:var(--muted);
+    padding:4px 11px;border-radius:999px;font-size:12.5px}
+  h2{font-size:22px;margin:42px 0 8px;letter-spacing:-.3px}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:8px}
+  .lead{color:var(--muted);margin:0 0 18px}
+  .cards{display:grid;grid-template-columns:1fr;gap:18px}
+  @media(min-width:840px){.cards{grid-template-columns:repeat(3,1fr)}}
+  .card{border:1px solid var(--border);border-radius:14px;background:var(--panel);
+    padding:20px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .card .tag{position:absolute;top:0;left:0;height:4px;width:100%}
+  .card.input .tag{background:var(--input)} .card.output .tag{background:var(--output)}
+  .card.context .tag{background:var(--context)}
+  .cat{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:4px}
+  .card.input .cat{color:var(--input)} .card.output .cat{color:var(--output)} .card.context .cat{color:var(--context)}
+  .pick{font-size:20px;font-weight:700;margin:2px 0 2px}
+  .pick a{color:var(--text);text-decoration:none;border-bottom:1px dotted var(--muted)}
+  .stars{color:var(--warn);font-size:13px;margin-bottom:10px}
+  .card p{margin:0 0 12px;font-size:14.5px;color:#cdd2dd}
+  .save{margin-top:auto;background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;padding:10px 12px;font-size:13px}
+  .save b{color:var(--accent2)}
+  .copilot-flag{font-size:12px;margin-top:10px;padding:6px 9px;border-radius:7px;display:inline-block}
+  .yes{background:rgba(90,209,165,.12);color:var(--accent2);border:1px solid rgba(90,209,165,.3)}
+  .indirect{background:rgba(255,209,102,.1);color:var(--warn);border:1px solid rgba(255,209,102,.28)}
+  section.block{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:24px 26px;margin-top:18px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em}
+  td a{color:var(--accent);text-decoration:none} td a:hover{text-decoration:underline}
+  #audit td:nth-child(3){font-size:13px}
+  #audit th:nth-child(4),#audit td:nth-child(4),
+  #audit th:nth-child(5),#audit td:nth-child(5){white-space:nowrap}
+  #audit tbody tr{cursor:pointer;transition:background .18s ease,box-shadow .18s ease,transform .18s ease}
+  #audit tbody tr:hover{background:var(--panel2);box-shadow:inset 3px 0 0 var(--accent);transform:translateX(3px)}
+  .overlay{position:fixed;inset:0;background:rgba(10,12,18,.72);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;
+    opacity:0;pointer-events:none;transition:opacity .22s ease}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    max-width:860px;width:100%;max-height:86vh;overflow-y:auto;padding:6px 30px 26px;position:relative;
+    transform:translateY(14px) scale(.98);transition:transform .22s ease;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+  .overlay.open .modal{transform:none}
+  .modal-close{position:sticky;top:12px;float:right;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);width:32px;height:32px;border-radius:8px;font-size:18px;line-height:1;cursor:pointer;z-index:1}
+  .modal-close:hover{color:var(--text);border-color:var(--accent)}
+  .modal h1{font-size:21px;margin:20px 44px 8px 0;letter-spacing:-.3px}
+  .modal h2{font-size:16px;margin:24px 0 8px;color:var(--accent)}
+  .modal h3{font-size:14.5px;margin:18px 0 6px}
+  .modal p,.modal ul{font-size:14px;color:#cdd2dd;margin:8px 0}
+  .modal ul{padding-left:22px}
+  .modal li{margin:4px 0}
+  .modal pre{background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+    padding:12px 14px;overflow-x:auto;margin:10px 0}
+  .modal pre code{background:none;border:none;padding:0;font-size:12.5px;line-height:1.5}
+  .modal del{color:var(--muted)}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .p-in{background:rgba(124,156,255,.14);color:var(--input)}
+  .p-out{background:rgba(255,159,110,.14);color:var(--output)}
+  .p-ctx{background:rgba(192,139,255,.14);color:var(--context)}
+  .ok{color:var(--accent2);font-weight:700} .no{color:var(--muted)}
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:0}
+  ol.steps li{counter-increment:s;position:relative;padding:12px 0 12px 46px;border-bottom:1px solid var(--border)}
+  ol.steps li:last-child{border-bottom:none}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:11px;width:30px;height:30px;
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--accent);
+    font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+  ol.steps b{color:var(--text)}
+  ol.steps .roi{font-size:12px;color:var(--accent2);font-weight:600;margin-left:6px}
+  code{background:var(--panel2);border:1px solid var(--border);border-radius:5px;
+    padding:1px 6px;font-family:"SF Mono",Consolas,Monaco,monospace;font-size:13px;color:#ffd9b0}
+  .callout{border-left:3px solid var(--accent);background:var(--panel2);
+    padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px;color:#cdd2dd}
+  .callout.warn{border-left-color:var(--warn)}
+  .src{font-size:13.5px;color:var(--muted)}
+  .src a{color:var(--accent);text-decoration:none}
+  .src li{margin-bottom:5px}
+  footer{margin-top:40px;color:var(--muted);font-size:12.5px;text-align:center;line-height:1.7}
+  .ratio{display:flex;gap:2px;height:26px;border-radius:6px;overflow:hidden;margin:14px 0;border:1px solid var(--border)}
+  .ratio div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0f1117}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Token-Reduction Skills &amp; Tools for AI Coding / GitHub Copilot</h1>
+  <div class="sub">Deep-research findings — one standout tool per token category, plus directly-applicable GitHub Copilot settings.</div>
+  <p style="color:#cdd2dd;margin:0">
+    Because every Copilot interaction is billed by tokens (and you spend
+    <strong>AI Credits</strong> at <code>1 credit = $0.01</code>), cutting tokens directly stretches your
+    3,900-credit monthly allowance. The biggest lever is <strong>output tokens</strong>, which cost
+    <strong>~5&times; more</strong> than input — so output control delivers the highest ROI per change.
+  </p>
+  <div class="ratio" title="Relative per-token price for Claude Sonnet">
+    <div style="flex:10;background:var(--input)">INPUT&nbsp;&times;10</div>
+    <div style="flex:1;background:#5ad1a5">CACHED&nbsp;&times;1</div>
+    <div style="flex:50;background:var(--output)">OUTPUT&nbsp;&times;50</div>
+  </div>
+  <div class="sub" style="margin:0">Price ratio per token (Sonnet 4.x): input&nbsp;:&nbsp;cached&nbsp;:&nbsp;output &asymp; 10&nbsp;:&nbsp;1&nbsp;:&nbsp;50</div>
+  <div class="meta">
+    <span class="chip">Mined: 117,552 GitHub repos &gt;500&#9733; (snapshot 2026-06-01)</span>
+    <span class="chip">+ live web research</span>
+    <span class="chip">Compiled June 2026</span>
+  </div>
+</header>
+
+<p class="lead">
+  <strong>How to read this:</strong> the three categories you asked about map to <em>where</em> in a request
+  tokens get spent. <span style="color:var(--input)">Input</span> = what you send each call.
+  <span style="color:var(--output)">Output</span> = what the model generates.
+  <span style="color:var(--context)">Context</span> = the standing/repeated material (history, system files,
+  retrieved code, cache) that rides along on <em>every</em> turn. Each card below is the single best-in-class tool
+  I found for that category, with an honest note on whether it plugs into GitHub Copilot directly or applies as a technique.
+</p>
+
+<div class="cards">
+
+  <div class="card input">
+    <div class="tag"></div>
+    <div class="cat">Input tokens</div>
+    <div class="pick"><a href="https://github.com/microsoft/LLMLingua" target="_blank">microsoft / LLMLingua</a></div>
+    <div class="stars">&#9733; 6,234 &middot; Python &middot; Microsoft Research</div>
+    <p>Prompt-compression engine. A small model strips non-essential tokens from a prompt before it's sent —
+       <strong>up to 20&times; compression</strong> with minimal quality loss. Best for long, repetitive context
+       (docs, transcripts, RAG chunks) you feed to an LLM.</p>
+    <div class="copilot-flag indirect">&#9888; Technique for your own API apps — not inside Copilot Chat. For Copilot, apply the <em>principle</em> via content exclusion + repomix&nbsp;<code>--compress</code>.</div>
+    <div class="save">Reported real-world: one team cut <b>$42K&rarr;$2.1K/mo</b>. A 2,400-token prompt &rarr; 115 tokens at 20&times;.</div>
+  </div>
+
+  <div class="card output">
+    <div class="tag"></div>
+    <div class="cat">Output tokens</div>
+    <div class="pick"><a href="https://github.com/567-labs/instructor" target="_blank">567-labs / instructor</a></div>
+    <div class="stars">&#9733; 13,077 &middot; Python (+ TS/Go/Rust)</div>
+    <p>Forces the model to emit <strong>structured output</strong> (typed JSON / schema) instead of rambling prose.
+       No preamble, no "Sure! Here's…", no trailing explanation — just the data. Eliminates the verbose tokens that
+       cost 5&times; the most. Alternatives: <a href="https://github.com/dottxt-ai/outlines" target="_blank">outlines</a>,
+       <a href="https://github.com/guidance-ai/guidance" target="_blank">guidance</a>,
+       <a href="https://github.com/BoundaryML/baml" target="_blank">BAML</a>.</p>
+    <div class="copilot-flag indirect">&#9888; For your own apps. In Copilot, get the same effect with <em>terse custom instructions</em> (see checklist &rarr;).</div>
+    <div class="save">Schema-constrained replies typically cut output <b>40–70%</b> on code/extraction tasks.</div>
+  </div>
+
+  <div class="card context">
+    <div class="tag"></div>
+    <div class="cat">Context tokens</div>
+    <div class="pick">Copilot's built-in prefix cache</div>
+    <div class="stars">No extra tool needed</div>
+    <p>Repeated or stable context is served from Copilot's own <strong>cached input tokens</strong>
+       (billed ~10&times; cheaper than fresh input) instead of re-processing the whole context each turn.
+       Keep instruction files and session prefixes stable so the cache keeps hitting.</p>
+    <div class="copilot-flag yes">&#10003; Built into Copilot — keep sessions stable to maximize cache hits.</div>
+    <div class="save">For repeated workloads, cache hits avoid full re-processing — <b>cached input is ~1/10th</b> the price of fresh input.</div>
+  </div>
+
+</div>
+
+<div class="callout">
+  <strong>The honest catch:</strong> the library picks above are for building <em>your own</em>
+  LLM applications via API. Inside the GitHub Copilot product you can't drop in LLMLingua or Instructor — but the
+  <em>same three principles</em> (compress input, constrain output, cache/trim context) all have direct Copilot
+  equivalents. The tools that <strong>do</strong> plug straight into Copilot are the <strong>context-packers</strong>
+  (repomix, gitingest) and Copilot's own settings — covered next.
+</div>
+
+<h2><span class="num">A</span>Tools you CAN use with GitHub Copilot directly</h2>
+<p class="lead">These are usable today: pack your repo with one of these and paste the compressed result into Copilot Chat
+  (or run repomix as an MCP server), instead of letting Copilot index your whole workspace.</p>
+<section class="block" style="padding:10px 18px">
+<table>
+  <thead><tr><th>Tool</th><th>Stars</th><th>Category</th><th>What it does for tokens</th><th>Copilot-ready</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/yamadashy/repomix" target="_blank">yamadashy/repomix</a></td>
+      <td>25,837</td><td><span class="pill p-ctx">Context</span></td>
+      <td>Packs a repo into one AI-friendly file; <code>--compress</code> uses Tree-sitter to keep structure while cutting <strong>~70%</strong> of tokens. Reports per-file token counts. Also an MCP server.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/coderamp-labs/gitingest" target="_blank">coderamp-labs/gitingest</a></td>
+      <td>14,806</td><td><span class="pill p-in">Input</span></td>
+      <td>Swap <code>hub</code>&rarr;<code>ingest</code> in any GitHub URL to get a prompt-friendly digest of a codebase. Trim to only the files you need before pasting.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/mufeedvh/code2prompt" target="_blank">mufeedvh/code2prompt</a></td>
+      <td>7,378</td><td><span class="pill p-in">Input</span></td>
+      <td>CLI that turns a codebase into a single prompt with a source tree + token count and glob filtering, so you send only what matters.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/simonw/files-to-prompt" target="_blank">simonw/files-to-prompt</a></td>
+      <td>2,743</td><td><span class="pill p-in">Input</span></td>
+      <td>Concatenate selected files into one clean prompt — lightweight way to hand-pick minimal context.</td>
+      <td class="ok">&#10003; Yes</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+
+<h2><span class="num">B</span>Bottom line — one pick per category</h2>
+<section class="block">
+<table>
+  <thead><tr><th>Category</th><th>Best general tool</th><th>What to actually do in Copilot</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="pill p-in">Input</span></td>
+      <td><a href="https://github.com/microsoft/LLMLingua" target="_blank">LLMLingua</a> (compress prompts)</td>
+      <td>Pack context with <a href="https://github.com/yamadashy/repomix" target="_blank">repomix&nbsp;<code>--compress</code></a> + Content Exclusion + prune MCP servers.</td>
+    </tr>
+    <tr>
+      <td><span class="pill p-out">Output</span></td>
+      <td><a href="https://github.com/567-labs/instructor" target="_blank">Instructor</a> (structured output)</td>
+      <td>Add <code>"Code only, no explanation"</code> to <code>copilot-instructions.md</code>; use Haiku/Auto + medium reasoning.</td>
+    </tr>
+    <tr>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td><em>Copilot's built-in prefix caching</em> (no extra tool)</td>
+      <td>Shrink always-on instruction files, start fresh sessions, keep prefixes stable for Copilot's built-in caching.</td>
+    </tr>
+  </tbody>
+</table>
+<div class="callout" style="margin-bottom:0">
+  <strong>If you do only one thing:</strong> add output-control rules to <code>copilot-instructions.md</code>.
+  Output tokens are 5&times; the price of input, so trimming verbose replies is the fastest way to make your
+  3,900 monthly credits go further.
+</div>
+</section>
+
+<h2><span class="num">C</span>GitHub Copilot settings — the highest-ROI changes</h2>
+<p class="lead">From GitHub's own engineering guidance and the dedicated
+  <a href="https://github.com/olivomarco/github-copilot-token-optimization" target="_blank" style="color:var(--accent)">copilot-token-optimization</a>
+  guide. Ordered by impact. The first three take ~15 minutes total and hit all three token categories.</p>
+<section class="block">
+<ol class="steps">
+  <li><b>Add output-control rules to <code>.github/copilot-instructions.md</code></b> <span class="roi">↓ output 40–70%</span><br>
+      e.g. <code>"Code only, no explanation unless asked."</code> and <code>"Bullets over paragraphs."</code>
+      Output is the 5&times;-priced category, so this is the single biggest win.
+      <span class="pill p-out" style="margin-left:4px">Output</span></li>
+  <li><b>Shrink your always-on context files</b> <span class="roi">↓ context every call</span><br>
+      <code>copilot-instructions.md</code> and <code>AGENTS.md</code> are re-sent on <em>every</em> interaction. Strip
+      LLM-generated boilerplate; keep only short, specific rules. Split big ones and use <code>applyTo:</code> path
+      scoping so they load only when relevant. <span class="pill p-ctx" style="margin-left:4px">Context</span></li>
+  <li><b>Default to the <code>Auto</code> model</b> <span class="roi">↓ cost + paid-plan discount</span><br>
+      Auto picks a right-sized model and earns the documented multiplier discount on paid plans. Pin Opus/GPT-5.5
+      only when a task truly needs it. Use <strong>Haiku</strong> (~4&times; cheaper than Sonnet) for simple edits.
+      <span class="pill p-out" style="margin-left:4px">Output</span></li>
+  <li><b>Use Ask Mode for simple questions, not Agent Mode</b> <span class="roi">↓ 60–90%</span><br>
+      Agent Mode spends tokens on tool-call reasoning loops. A plain question doesn't need an agent.
+      <span class="pill p-ctx" style="margin-left:4px">Context</span></li>
+  <li><b>Disable unused MCP servers</b> <span class="roi">↓ 100–500 tok / step</span><br>
+      Each tool's schema rides in context every agent step. 15 unused servers &times; 15 steps &asymp; <strong>265K wasted tokens</strong>.
+      <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Configure Content Exclusion</b> (Business/Enterprise) <span class="roi">most reliable trim</span><br>
+      Tell Copilot which files/paths to skip entirely — generated code, vendored deps, large fixtures.
+      <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Prefer CLI over MCP for deterministic data</b> <span class="roi">↓ input</span><br>
+      Run <code>gh pr diff</code> / fetch files <em>up front</em>, then point the agent at them — no tool-call JSON
+      schemas or reasoning overhead. <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Convert <code>.docx/.pdf/.pptx/.xlsx</code> to Markdown first</b> (e.g. <a href="https://github.com/microsoft/markitdown" target="_blank">Microsoft MarkItDown</a>) <span class="roi">strips noise</span><br>
+      Raw office/HTML formatting is token-dense junk. <span class="pill p-in" style="margin-left:4px">Input</span></li>
+  <li><b>Session hygiene</b> <span class="roi">↓ context drift</span><br>
+      Close unused editor tabs and start fresh conversations — accumulated context silently inflates every turn.
+      Keep the front of the session stable so prefix caching keeps hitting. <span class="pill p-ctx" style="margin-left:4px">Context</span></li>
+  <li><b>Write precise prompts</b> <span class="roi">↓ clarification loops</span><br>
+      <code>"Add a null check to getUser()"</code> beats <code>"fix the user code"</code> — fewer back-and-forth round trips.
+      <span class="pill p-out" style="margin-left:4px">Output</span></li>
+</ol>
+</section>
+
+<h2><span class="num">D</span>Caveman &amp; memory skills (from the companion research)</h2>
+<p class="lead">Pulled from the deep-research notes in <code>token-saving-skills-research.md</code>. These are
+  Claude&nbsp;Code&ndash;oriented skills, but the principles map onto the same three token categories.
+  <span style="color:var(--output)">Caveman</span> attacks <em>output</em>; <span style="color:var(--context)">memory</span>
+  skills attack <em>context</em> (replayed history + repeated file scans).</p>
+<section class="block" style="padding:10px 18px">
+<table>
+  <thead><tr><th>Skill / system</th><th>Category</th><th>What it does &amp; why it saves</th><th>Reported savings</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/JuliusBrussee/caveman" target="_blank">caveman</a></td>
+      <td><span class="pill p-out">Output</span></td>
+      <td>Drop-in skill that forces terse, filler-free responses — strips pleasantries, restatements, and step-by-step narration. <em>Caveat:</em> affects only output tokens.</td>
+      <td>~65% output (peaks ~87%); <strong>~30–50%</strong> real-world bill</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/JuliusBrussee/caveman" target="_blank">caveman-compress</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Companion skill that rewrites <code>CLAUDE.md</code> / project notes into a denser form. Memory files reload <em>every</em> session, so one compression saves input tokens permanently.</td>
+      <td>~46% smaller memory files</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/mem0ai/mem0" target="_blank">Mem0</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Fact extraction → vector store. Retrieves stored facts instead of replaying the whole conversation each call.</td>
+      <td>~90% fewer tokens, 91% lower latency</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/MemoriLabs/Memori" target="_blank">Memori</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Persistent memory layer that loads a compact slice per query instead of full-context replay.</td>
+      <td>~1,294 tok/query (~5% of full); <strong>20×+</strong></td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/DeusData/codebase-memory-mcp" target="_blank">Codebase Memory MCP</a></td>
+      <td><span class="pill p-ctx">Context</span></td>
+      <td>Code knowledge graph — answers "where is X / what calls Y" via sub-ms queries instead of file-by-file <code>grep</code>/read exploration. The biggest win on coding projects.</td>
+      <td>~99% (3,400 vs 412,000 tok / 5 queries)</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+<div class="callout warn">
+  <strong>Reduce or increase?</strong> Memory skills are a <em>trade</em> — a one-time store cost + small per-lookup cost
+  in exchange for not re-sending history/files every turn. They <strong>save</strong> on long or multi-session work with
+  high reuse, but can <strong>cost</strong> extra on a short one-pass task. See the break-even note in
+  <code>token-saving-skills-research.md</code>.
+</div>
+
+<h2><span class="num">E</span>Security Audit</h2>
+<p class="lead">Every linked repository was cloned and audited for install-time code execution, telemetry/exfiltration,
+  dangerous code patterns (eval/pickle/trust_remote_code), agent attack surface (skills/hooks/MCP), and maintenance.
+  Full per-repo reports live in the <code>risk assessment/</code> folder. No malware was found in any repository.
+  <strong>Click any row</strong> to read the full audit report for that repository.</p>
+<section class="block" style="padding:10px 18px">
+<table id="audit">
+  <thead><tr><th>Skill</th><th>Verdict</th><th>Findings / Notes</th><th>AI model</th><th>Date audited</th></tr></thead>
+  <tbody>
+    <tr data-report="LLMLingua"><td>microsoft/LLMLingua</td><td class="no" style="color:var(--warn)">⚠ Caution</td><td><code>trust_remote_code=True</code> <strong>by default</strong> when loading HF models — RCE surface via model repos — <strong>plus an <code>eval()</code> injection sink</strong> on the public <code>context_budget</code> param. No telemetry, no hooks. Set <code>trust_remote_code=False</code>, pin model revisions, never feed user input to <code>context_budget</code>.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="instructor"><td>567-labs/instructor</td><td class="ok">✓ Low</td><td>Clean client wrapper; no telemetry, no install hooks, no eval/pickle. Very active.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="outlines"><td>dottxt-ai/outlines</td><td class="ok">✓ Low</td><td>Local structured generation; clean scan; no default trust_remote_code. Minor: local disk cache uses <code>cloudpickle</code> (exploit needs write access to your <code>~/.cache</code>).</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="guidance"><td>guidance-ai/guidance</td><td class="ok">✓ Low</td><td>trust_remote_code only as explicit user passthrough; no telemetry; ships native parser wheels (standard ecosystem trust).</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="baml"><td>BoundaryML/baml</td><td class="no" style="color:var(--warn)">~ Low-Mod</td><td>Ships compiled binaries; curl|sh installer with rolling toolchain channel; <strong>PostHog telemetry in IDE/playground tooling</strong> — disable if sensitive. Install via pinned npm/pip packages instead.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="repomix"><td>yamadashy/repomix</td><td class="ok">✓ Low</td><td>No telemetry in CLI; network only to codeload.github.com on explicit remote packs; <strong>built-in Secretlint secret scanning</strong>. Best security posture of the packers.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="gitingest"><td>coderamp-labs/gitingest</td><td class="ok">✓ Low (CLI)</td><td>CLI is local and clean. <strong>Hosted gitingest.com sends your repo to their servers</strong> — CLI only for private code. No secret scanning.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="code2prompt"><td>mufeedvh/code2prompt</td><td class="ok">✓ Low</td><td>Rust CLI with no HTTP dependencies — offline by construction. Prefer <code>cargo install</code> over release binaries.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="files-to-prompt"><td>simonw/files-to-prompt</td><td class="ok">✓ Very low</td><td>10 files, zero network/exec/pickle; trusted author. Lowest-risk repo in the audit.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="github-copilot-token-optimization"><td>olivomarco/copilot-token-optimization</td><td class="no" style="color:var(--warn)">~ Low-Mod</td><td>Guide itself is harmless. Bundled "squad" skills = large standing-instruction surface; <code>sync-mesh.sh</code> has an <strong>eval-curl shell-injection path</strong> driven by <code>mesh.json</code> values — never run it on an untrusted <code>mesh.json</code>. Adopt skills individually after reading.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="markitdown"><td>microsoft/markitdown</td><td class="no" style="color:var(--warn)">~ Low-Mod</td><td>Untrusted-document parser surface (third-party parser CVEs); optional Azure upload &amp; plugins (both off by default); no telemetry. Fine for your own docs.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="caveman"><td>juliusbrussee/caveman</td><td class="no" style="color:var(--output)">● Moderate</td><td>All exec call sites audited benign; <strong>no telemetry</strong>. Risk: curl|bash install from <strong>unpinned main</strong>, always-on hooks edited into settings.json, single maintainer. Install from a reviewed pinned clone; diff CLAUDE.md after compress.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="mem0"><td>mem0ai/mem0</td><td class="no" style="color:var(--warn)">~ Low-Mod</td><td><strong>PostHog telemetry on by default</strong> (anonymous metadata + host fingerprint, <em>not</em> memory content; disable with <code>MEM0_TELEMETRY=false</code> before first import); hosted mode sends memories to mem0 cloud; OSS mode otherwise local and clean.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="memori"><td>GibsonAI/memori</td><td class="no" style="color:var(--output)">● Moderate (privacy)</td><td><strong>Cloud client, not a local layer: full conversation turns (incl. system prompt) are POSTed to api.memorilabs.ai</strong> — even in BYODB mode (disclosed in docs; hardcoded anonymous API keys). Do not use for client code, secrets, or NDA work; no covert behavior found.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+    <tr data-report="codebase-memory-mcp"><td>DeusData/codebase-memory-mcp</td><td class="no" style="color:var(--output)">● Moderate</td><td>npm <code>postinstall</code> downloads <strong>opaque prebuilt binary</strong>; checksum check non-fatal; the <code>go install</code> path is <strong>not a source build</strong> (fetches the same binary). It is a <strong>C</strong> codebase — C source audits clean (no network/telemetry). Build from C source, pin, and don't index untrusted repos.</td><td>Claude Fable 5</td><td>2026-06-12</td></tr>
+  </tbody>
+</table>
+</section>
+
+<footer>
+  Generated as a self-contained HTML report &middot; open in any browser, no internet required.<br>
+  Pricing/token mechanics referenced from the companion <code>AI-Harnesses-and-Copilot-Billing-Notes.md</code>.
+</footer>
+
+</div>
+
+<div class="overlay" id="auditOverlay" role="dialog" aria-modal="true" aria-label="Security audit report">
+  <div class="modal" id="auditModal">
+    <button class="modal-close" id="auditClose" aria-label="Close report">&times;</button>
+    <div id="auditBody"></div>
+  </div>
+</div>
+
+<!-- audit-reports -->
+<script type="text/markdown" id="report-LLMLingua">
+# Security Assessment — microsoft/LLMLingua
+**Verdict: ⚠️ CAUTION — dangerous default model-loading config *and* an unsanitized `eval()` sink**
+Audited 2026-06-12 · Reviewed by senior analyst 2026-06-12 (corrected a false "no eval" clean-area claim — see F2) · Last upstream commit: 2025-10-28 · 73 files, ~4.4 MB · Python · Microsoft Research
+
+## What it is
+Prompt-compression library: a small local language model scores and strips low-information tokens from prompts before they're sent to a large model.
+
+## Findings
+
+### 🔴 F1 — `trust_remote_code=True` by default (remote code execution surface)
+`llmlingua/prompt_compressor.py:121-123`:
+```python
+trust_remote_code = model_config.get("trust_remote_code", True)
+if "trust_remote_code" not in model_config:
+    model_config["trust_remote_code"] = trust_remote_code
+```
+Unless you explicitly pass `trust_remote_code=False`, every model load via Hugging Face `transformers` is allowed to **download and execute arbitrary Python code from the model repository**. Line 1990 also hardcodes `trust_remote_code=True` for the `jinaai/jina-embeddings-v2-base-en` embedding model. If any model repo you load (or a typosquatted name, or a compromised account) ships a malicious `modeling_*.py`, that code runs with your user privileges the moment `PromptCompressor` initializes.
+
+**Mitigation:** always construct with `model_config={"trust_remote_code": False}` and use the default `microsoft/llmlingua-2-*` models (standard architectures that don't need remote code). Pin model revisions with `revision=`.
+
+### 🟠 F2 — Unsanitized `eval()` on the `context_budget` parameter (corrected finding)
+**The original audit's clean-area claim "No `eval`/`exec`/pickle in the library code" was wrong.** `llmlingua/prompt_compressor.py:1201`:
+```python
+target_token = eval("target_token" + context_budget)
+```
+`context_budget` is a **public parameter of `compress_prompt()`** (declared at lines 232/292/444, default `"+100"`) that flows unsanitized through `control_context_budget()` into `eval()`. With the default it harmlessly computes `target_token+100`. But because `eval` evaluates an *arbitrary expression*, any value reaching this argument is executed as Python — e.g. `context_budget="or __import__('os').system('whoami')"` runs the command (`target_token` is truthy, so chain a `*0 or …` to force evaluation). No allow-list, no numeric cast, no `ast.literal_eval`.
+
+**Reachability / severity:** This is **not** auto-triggered the way F1 is. It is only remote-code-execution if an application passes attacker-influenced data into `context_budget` — plausible if a product exposes a "compression budget/ratio" knob to end users or pulls it from a config/request, otherwise it stays a latent sink. Either way it is a genuine `eval`-injection vulnerability and a poor pattern for a Microsoft-published library.
+**Mitigation:** never pass externally-derived values to `context_budget`; treat it as a hardcoded constant. Upstream fix: replace with arithmetic parsing (`int`/`ast.literal_eval`).
+
+*(Note: the `.eval()` calls at lines 1907/1937/1992 are PyTorch `model.eval()` — benign and unrelated.)*
+
+### 🟡 F3 — Model downloads at first use
+First run downloads hundreds of MB from the Hugging Face Hub. This is normal for ML libraries but means runtime network access and trust in the HF CDN. No integrity pinning by default.
+
+### 🟢 Clean areas
+- No telemetry/analytics of any kind.
+- No install-time hooks (`pyproject`-based packaging, no `setup.py` tricks).
+- No pickle deserialization; no outbound endpoints other than Hugging Face model downloads.
+- ~~No `eval`/`exec` in the library code~~ — **retracted; see F2.** One unsanitized `eval()` sink is present.
+- Microsoft Research provenance; signed releases via PyPI.
+
+### 🟡 F4 — Maintenance slowing
+Last commit ~7.5 months ago (2025-10). Not abandoned, but slower response to dependency CVEs (it pulls `transformers`/`torch`, both of which have a steady CVE stream — keep them updated yourself).
+
+## What you expose yourself to
+- **You run downloaded model code by default** (F1) — the most realistic compromise path, and it's real.
+- **An `eval()` injection sink** (F2) if your application ever feeds untrusted data into `context_budget`.
+- Heavy transitive dependency tree (`torch`, `transformers`) — large but mainstream supply chain.
+- Your prompts are processed **locally**; nothing is sent anywhere except model downloads. Good privacy posture.
+
+## Recommendation
+Use it, but: **always set `trust_remote_code=False`**, pin model revisions, keep `transformers`/`torch` patched, do not point it at arbitrary community models, and **never wire user-controlled input to `context_budget`** (keep it a constant). The eval sink is unlikely to be reachable in typical single-tenant use, but must be closed off in any multi-tenant or user-facing deployment.
+</script>
+<script type="text/markdown" id="report-instructor">
+# Security Assessment — 567-labs/instructor
+**Verdict: ✅ LOW RISK**
+Audited 2026-06-12 · Last upstream commit: 2026-06-05 (active) · 941 files · Python (+TS/Go/Rust ports)
+
+## What it is
+A thin wrapper around LLM provider SDKs (OpenAI, Anthropic, etc.) that validates model output against Pydantic schemas and retries until the output parses. Pure client-side library.
+
+## Findings
+
+### 🟢 Clean areas
+- **No telemetry or analytics** in the library code (grep for PostHog/Segment/Amplitude/Sentry across `*.py`: zero hits outside docs).
+- **No install hooks** — modern `pyproject.toml` packaging, no `setup.py` custom commands.
+- **No `eval`/`exec`/pickle** in the request/response path; structured parsing is Pydantic-based (schema-constrained construction — exactly the safe pattern).
+- Network traffic goes **only to the LLM provider you configure** with your own API key. Instructor adds no endpoints of its own.
+- Very active maintenance (commits within the last week), large contributor base, 13k+ stars — strong review pressure.
+
+### 🟡 Notes (not vulnerabilities)
+- Your prompts/data go to whatever LLM provider you wire it to — that's your existing exposure, unchanged by instructor.
+- Moderately large optional dependency surface (provider SDKs); install only the extras you need (`instructor[anthropic]` etc.).
+
+## What you expose yourself to
+Essentially the same risk as using the underlying provider SDK directly. No new trust relationships introduced.
+
+## Recommendation
+Safe to adopt. Standard hygiene: pin the version, install minimal extras.
+</script>
+<script type="text/markdown" id="report-outlines">
+# Security Assessment — dottxt-ai/outlines
+**Verdict: ✅ LOW RISK (one local-cache deserialization note added on review)**
+Audited 2026-06-12 · Reviewed by senior analyst 2026-06-12 (added F1 on review) · Last upstream commit: 2026-05-18 (active) · 293 files · Python
+
+## What it is
+Structured/constrained text generation: compiles JSON schemas and grammars into token-level constraints applied during local model inference (or via provider APIs).
+
+## Findings
+
+### 🟡 F1 — `cloudpickle` deserialization in the local disk cache (added on review)
+`outlines/caching.py:17-39` defines a `diskcache`-backed cache whose `get`/`fetch` methods call `cloudpickle.loads(data)` on stored entries (cache dir defaults to `~/.cache/outlines`, overridable via `OUTLINES_CACHE_DIR`). This turns "attacker can write to your cache directory" into "code execution on next cache read." **Low practical severity** — the cache is outlines' own local artifact under your home dir, so exploitation requires an attacker who can already write files as you — but it's the same deserialization pattern flagged elsewhere in this audit, so it's recorded here for consistency. The original report's "no pickle in the *generation path*" is technically correct (this is the caching path), but the unqualified clean-area phrasing understated it.
+
+### 🟢 Clean areas
+- **No telemetry/analytics** in library code.
+- **No install hooks**; `pyproject`-based packaging.
+- No `eval`/`exec` on untrusted data; the only deserialization is the local cache in F1.
+- `trust_remote_code` is **not** defaulted on anywhere in `outlines/` (unlike LLMLingua) — model loading honors what you pass.
+- Active maintenance, backed by a company (.txt / dottxt), healthy contributor base.
+
+### 🟡 Notes
+- Loading local models pulls `transformers`/`vllm`-class dependencies — large mainstream supply chain; keep patched.
+- Grammar/regex compilation of *attacker-supplied schemas* could in theory be a DoS vector (pathological grammars), but for your own schemas this is irrelevant.
+
+## What you expose yourself to
+Local inference stays local; API backends send prompts to your chosen provider only. No new trust relationships.
+
+## Recommendation
+Safe to adopt. Pin versions; don't compile schemas/grammars from untrusted third parties.
+</script>
+<script type="text/markdown" id="report-guidance">
+# Security Assessment — guidance-ai/guidance
+**Verdict: ✅ LOW RISK**
+Audited 2026-06-12 · Last upstream commit: 2026-05-21 (active) · 323 files · Python + C++ extension
+
+## What it is
+Constrained-generation programming framework (originally Microsoft) — interleaves program logic with model generation and enforces grammars at the token level via a compiled parser (llguidance).
+
+## Findings
+
+### 🟢 Clean areas
+- **No telemetry/analytics** in library source.
+- **No install hooks** beyond standard build of its native extension via mainstream packaging (wheels published to PyPI).
+- `trust_remote_code` appears only in `guidance/models/_transformers.py:45` as a **passthrough of a user-supplied kwarg** — it is *not* enabled by default. Correct, safe handling.
+- No pickle/`eval` on untrusted data in the generation path.
+- Active maintenance and a well-known org (guidance-ai, ex-Microsoft team).
+
+### 🟡 Notes
+- Ships a **compiled native parser** — you're trusting prebuilt wheels; standard for the ecosystem (same trust as numpy).
+- Local models mean the usual `torch`/`transformers` dependency mass.
+
+## What you expose yourself to
+Same baseline as any local-inference library. No data leaves your machine except calls to providers you explicitly configure.
+
+## Recommendation
+Safe to adopt. Prefer official PyPI wheels; pin versions.
+</script>
+<script type="text/markdown" id="report-baml">
+# Security Assessment — BoundaryML/baml
+**Verdict: 🟡 LOW-MODERATE RISK**
+Audited 2026-06-12 · Last upstream commit: 2026-06-12 (extremely active) · 8,105 files, ~139 MB · Rust core + TS/Python SDKs
+
+## What it is
+A DSL + toolchain for defining structured LLM functions, compiled by a Rust engine, with language SDKs, a CLI, and a VS Code extension. By far the largest and most complex codebase in this audit.
+
+## Findings
+
+### 🟡 F1 — Compiled native binaries are the delivery mechanism
+The SDKs bridge into a prebuilt Rust engine (`bridge_nodejs/dist`, native wheels). You execute opaque compiled code from BoundaryML's release pipeline. This is normal for native-extension packages, but it means auditing the source ≠ auditing what runs; you trust their build/release infrastructure.
+
+### 🟡 F2 — curl|sh installer
+The documented CLI install path is `curl -fsSL https://pkg.boundaryml.com/install.sh | sh`, which installs a wrapper that **downloads further toolchain versions at runtime** (their own design docs in `TASK/` describe a rustup-style wrapper with a "canary" default channel). A canary/rolling channel means you can receive new vendor code without an explicit upgrade action. Prefer pinned package-manager installs (npm/pip with exact versions) over the shell installer.
+
+### 🟡 F3 — Telemetry: inconclusive-to-present in tooling
+Scans found telemetry-related code in the VS Code extension and playground packages (`vscode-ext/src`, `playground-common`) and references in the engine. No hardcoded analytics endpoint was confirmed in the core engine source during this audit. Historically Boundary's tooling has used PostHog with an opt-out. **Assume the IDE tooling phones home unless you verify/disable it**; check current docs for `BAML_TELEMETRY`-style env vars before use in sensitive environments.
+
+### 🟢 Clean areas
+- No npm `postinstall` hooks (only dev-side `prepare` scripts that don't ship in the published package).
+- No pickle/eval patterns; Rust core.
+- Daily commit activity, VC-backed company, public CI — strong maintenance signal.
+
+## What you expose yourself to
+- Vendor build-pipeline trust (binaries) and, via the shell installer, rolling auto-updated vendor code.
+- Possible product telemetry from IDE tooling.
+- Your prompts go only to LLM providers you configure.
+
+## Recommendation
+Fine for use, but install via pinned package versions (not curl|sh), audit/disable telemetry in the VS Code extension if confidentiality matters, and treat upgrades as supply-chain events.
+</script>
+<script type="text/markdown" id="report-repomix">
+# Security Assessment — yamadashy/repomix
+**Verdict: ✅ LOW RISK**
+Audited 2026-06-12 · Last upstream commit: 2026-06-08 (very active) · 1,122 files · TypeScript (npm CLI + MCP server)
+
+## What it is
+Packs a repository into one AI-friendly file with Tree-sitter–based `--compress`; also runs as an MCP server. 25k+ stars.
+
+## Findings
+
+### 🟢 Clean areas
+- **No telemetry in the CLI/library.** All analytics hits in the scan were confined to `repomix/website/` (their docs site), which never runs on your machine.
+- **No install-time hooks** in the published package (`prepare: npm run build` is dev-only and does not execute on consumer installs).
+- **Network access is opt-in and narrow:** only `https://codeload.github.com/...` when you explicitly ask it to pack a *remote* repo (`src/core/git/gitHubArchive.ts`). Local packing makes no network calls.
+- **Built-in secret scanning:** `src/core/security/securityCheck.ts` runs Secretlint over files before output and excludes suspicious files — the only context-packer in this audit that actively mitigates the secret-leakage failure mode.
+- Very active maintenance, large community, MIT license.
+
+### 🟡 Notes (inherent, not code flaws)
+- **The output file is the risk.** A packed repo is a single blob of your source — paste it into the wrong chat/tool and you've shipped your codebase (and anything Secretlint missed: internal URLs, business logic, weak secrets in odd formats).
+- As an **MCP server** it grants the connected agent read access to repos and writes output files; its tool surface (`packRemoteRepositoryTool` etc.) can fetch arbitrary public GitHub repos on the agent's request. Scope it to the directories you intend.
+
+## What you expose yourself to
+Mainly self-inflicted data leakage via the packed output, not the tool itself.
+
+## Recommendation
+Safe to adopt — the best-engineered tool in this audit from a security standpoint. Review packed output before pasting it anywhere external; keep its default security check enabled (don't run `--no-security-check` out of habit).
+</script>
+<script type="text/markdown" id="report-gitingest">
+# Security Assessment — coderamp-labs/gitingest
+**Verdict: ✅ LOW RISK (CLI) / 🟡 privacy caveat (hosted service)**
+Audited 2026-06-12 · Last upstream commit: 2025-08-16 (~10 months quiet) · 125 files · Python
+
+## What it is
+Turns a Git repo into a prompt-friendly text digest. Two very different usage modes: a local pip CLI, and the hosted **gitingest.com** site (swap `hub`→`ingest` in a GitHub URL).
+
+## Findings
+
+### 🟡 F1 — The hosted service processes your code on their servers
+The repo contains the full server (`src/server/` — FastAPI, S3 utilities, hosting config). Using gitingest.com on a **private** repo (or pasting a token) means your code transits and may be stored on coderamp's infrastructure (S3-backed). For public repos this is moot; for anything private, use the CLI locally instead.
+
+### 🟢 Clean areas (CLI path)
+- The `gitingest` Python package itself makes no analytics calls; it shells out to `git clone` for the repo you specify and processes files locally.
+- No install hooks; `pyproject`-based packaging.
+- No `eval`/`exec`/pickle patterns in the ingestion code.
+
+### 🟡 F2 — Maintenance is slowing
+~10 months since last commit. The tool is simple enough that this is tolerable, but dependency patching lags.
+
+### 🟡 F3 — Inherent output risk
+Same as all context-packers: the digest is your codebase in one blob, with **no built-in secret scanning** (unlike repomix). `.gitignore`d files are excluded, but committed secrets/configs are not detected.
+
+## What you expose yourself to
+- CLI: essentially nothing beyond normal `git`/filesystem trust.
+- Hosted site: your repository content on third-party infrastructure.
+
+## Recommendation
+Use the **CLI** for anything non-public. Treat gitingest.com as "uploading your code to a stranger's server", because that is mechanically what it is. Prefer repomix where secret-scanning matters.
+</script>
+<script type="text/markdown" id="report-code2prompt">
+# Security Assessment — mufeedvh/code2prompt
+**Verdict: ✅ LOW RISK**
+Audited 2026-06-12 · Last upstream commit: 2026-06-09 (active) · 311 files · Rust
+
+## What it is
+Rust CLI that converts a codebase into a single LLM prompt with a source tree, token counts, and glob filtering.
+
+## Findings
+
+### 🟢 Clean areas
+- **No HTTP client dependencies** found in the workspace `Cargo.toml` manifests (no `reqwest`/`hyper`/`ureq`) — the tool is offline by construction; it cannot phone home.
+- No install hooks (cargo/published binaries; pip/npm wrappers are thin).
+- Rust memory safety; no dynamic code execution patterns.
+- Actively maintained (commits this week).
+
+### 🟡 Notes
+- If you install via prebuilt release binaries, you trust the maintainer's release pipeline (single primary maintainer). Installing via `cargo install code2prompt` builds from published source instead — preferable for the cautious.
+- Inherent context-packer caveat: output blob contains your code; **no built-in secret scanning** — review before pasting externally.
+- Handlebars templating: only renders templates *you* supply; not an untrusted-input surface in normal use.
+
+## What you expose yourself to
+Practically nothing beyond the output-handling risk common to all packers.
+
+## Recommendation
+Safe to adopt. Prefer `cargo install` over downloaded binaries if provenance matters to you.
+</script>
+<script type="text/markdown" id="report-files-to-prompt">
+# Security Assessment — simonw/files-to-prompt
+**Verdict: ✅ VERY LOW RISK**
+Audited 2026-06-12 · Last upstream commit: 2025-02-18 (dormant but feature-complete) · **10 files total** · Python
+
+## What it is
+Tiny CLI by Simon Willison (Django co-creator, prolific and highly trusted OSS author) that concatenates selected files into one clean prompt.
+
+## Findings
+
+### 🟢 Clean areas
+- The entire package is small enough to read in full. It contains **no network code, no subprocess, no eval/exec, no pickle** — verified by direct scan: zero hits.
+- Dependencies: essentially just `click`.
+- No install hooks.
+- Reputable, security-conscious author with a long public track record.
+
+### 🟡 Notes
+- Dormant since Feb 2025 — irrelevant for a ~300-line tool with one dependency; there is nothing to rot.
+- Inherent packer caveat applies: it will happily concatenate a committed `.env` if you point it at one. You choose the files, so the control is in your hands.
+
+## What you expose yourself to
+Nothing measurable. This is the lowest-risk repository in the audit.
+
+## Recommendation
+Safe to adopt without reservation. Just mind what files you select.
+</script>
+<script type="text/markdown" id="report-github-copilot-token-optimization">
+# Security Assessment — olivomarco/github-copilot-token-optimization
+**Verdict: 🟡 LOW-MODERATE RISK (docs are safe; bundled agent framework needs care — sync-mesh.sh finding corrected on review)**
+Audited 2026-06-12 · Reviewed by senior analyst 2026-06-12 (corrected the F2 "mkdir/echo/git/jq only" claim — script contains an `eval curl`) · Last upstream commit: 2026-06-08 (active) · 168 files · Markdown + shell/PS scripts
+
+## What it is
+Referenced by the HTML as a Copilot token-optimization *guide* — but the repo is actually a full agent-orchestration project ("squad"): 30+ Copilot SKILL.md files, agent definitions, an MCP config, and "distributed mesh" sync scripts. Author is a Microsoft employee (personal project).
+
+## Findings
+
+### 🟢 The guide itself is harmless
+Reading the README/docs for optimization advice executes nothing and carries zero risk. This is how the HTML report uses it.
+
+### 🟡 F1 — Adopting the bundled skills = large standing-instruction surface
+Each SKILL.md you copy into your own `.copilot/skills/` becomes **persistent instructions your agent obeys on every matching task**. I read the sensitive-sounding ones:
+- `secret-handling/SKILL.md` — *defensive*: prohibits reading `.env` files and writing secrets to committed paths.
+- `external-comms/SKILL.md` — *gated*: drafts GitHub issue responses but mandates a human review gate; "never posts autonomously".
+- `gh-auth-isolation`, `economy-mode`, etc. — process conventions, nothing exfiltrative.
+No malicious or covert instructions found. The risk is **volume and drift**: 30+ skills are a lot of agent behavior to vet, and future updates change your agent's behavior if you re-sync without review.
+
+### 🟠 F2 — `distributed-mesh/sync-mesh.sh` fetches remote repos **and uses `eval` on config-derived values** (corrected finding)
+The mesh script (`jq` + `git` + `curl`) clones/pulls "squad state" repos listed in your `mesh.json` before agent reads. Two distinct risks:
+
+1. **Indirect prompt injection (as originally noted):** fetched repo/contract content lands in agent-readable `SUMMARY.md` files — a textbook injection channel if you mesh with repos you don't control.
+
+2. **Shell command injection via `eval` (missed in the first pass):** the original report said the script contained "no obfuscated or dangerous commands (reviewed: mkdir/echo/git/jq only)." That is **incorrect** — `.copilot/skills/distributed-mesh/sync-mesh.sh:100` (and the `.squad/templates/` copy) runs:
+   ```bash
+   eval curl --silent --fail $auth_flag "$source" -o "$target/SUMMARY.md"
+   ```
+   `$source` and `$target` are read straight from `mesh.json` (lines 89-90). Because the command is wrapped in `eval`, shell metacharacters in those config values are interpreted — a `mesh.json` whose `source`/`sync_to` contains `$(...)`, backticks, or `;` achieves **arbitrary command execution** on the machine running the sync. `set -euo pipefail` does not mitigate this. The `eval` exists only to expand the `$auth_flag` Bearer-token string (line 97); it could be removed with a curl `--config`/array approach. The Zone-2 `git clone "$source"` path (line 82) is comparatively safe (no `eval`, args are positional), though a `--upload-pack`-style malicious `source` is a lesser concern.
+
+   **Net:** adopting the squad mesh and running `sync-mesh.sh` against a `mesh.json` you don't fully control is a direct RCE path, not merely an injection-context path. Treat `mesh.json` as trusted, security-sensitive configuration; never accept one from an untrusted source.
+
+### 🟡 F3 — `.copilot/mcp-config.json`
+Ships only a commented EXAMPLE GitHub MCP server using `${GITHUB_TOKEN}` — fine as an example; just understand any MCP server you enable gets that token.
+
+### 🟢 Clean areas
+- No install hooks, no binaries, no telemetry. Nothing runs unless you copy it in and run it.
+
+## What you expose yourself to
+Nothing, if you just read the guide. If you adopt the squad framework: a wide prompt-instruction surface, mesh repos as injection channels, **and an `eval`-based shell-injection path if you run `sync-mesh.sh` with an untrusted `mesh.json`** (F2).
+
+## Recommendation
+Read the guide freely. If you borrow skills, copy them **individually after reading them**, pin to a commit, and don't join meshes with repos outside your control. If you use `sync-mesh.sh`, only run it against a `mesh.json` you authored, or patch out the `eval` on line 100 first. The guide-only use case the HTML relies on remains zero-risk.
+</script>
+<script type="text/markdown" id="report-markitdown">
+# Security Assessment — microsoft/markitdown
+**Verdict: 🟡 LOW-MODERATE RISK (document-parsing attack surface)**
+Audited 2026-06-12 · Last upstream commit: 2026-05-26 (active) · 163 files · Python · Microsoft
+
+## What it is
+Converts office documents (.docx/.pdf/.pptx/.xlsx), HTML, images, audio, etc. to Markdown for LLM consumption.
+
+## Findings
+
+### 🟡 F1 — Its job is parsing untrusted files
+Document converters are a classic exploit surface: markitdown delegates to a stack of third-party parsers (pdfminer, mammoth, openpyxl, BeautifulSoup, etc.). A **maliciously crafted document** from an untrusted source could exploit a parser bug (historically: zip bombs, XXE in office XML, decompression bugs). Microsoft maintains it actively, but the transitive parser tree is where the CVEs live.
+**Mitigation:** keep it updated; convert untrusted documents in a sandbox/container if you handle attacker-supplied files routinely.
+
+### 🟡 F2 — Optional cloud features send content off-machine
+- The Azure **Document Intelligence** integration uploads documents to Azure for OCR/conversion (explicit opt-in via endpoint config).
+- LLM-based image description sends images to your configured LLM provider.
+Both off by default; just be aware that enabling them moves your documents to the cloud.
+
+### 🟡 F3 — Third-party plugin system
+`markitdown` loads converter plugins via entry points when `enable_plugins=True`. A plugin is arbitrary Python — only install plugins you trust. Off by default.
+
+### 🟢 Clean areas
+- **No telemetry**; no analytics endpoints in the package source.
+- **No `eval`/`exec`/pickle** in the conversion paths (verified by scan).
+- No install hooks. URL-fetching converters exist but only fetch URLs you pass.
+- The one external-process call (`converters/_exiftool.py`) shells out to ExifTool **only if you supply `exiftool_path`** (opt-in), uses **array args (no `shell=True`)** so it's injection-safe, and explicitly **refuses ExifTool < 12.24 to avoid CVE-2021-22204** — a security-conscious detail that reinforces the active-maintenance signal.
+- Microsoft provenance, active maintenance, prompt CVE handling history.
+
+## What you expose yourself to
+- Parser exploitation only if you feed it malicious documents.
+- Data residency only if you enable Azure/LLM features.
+
+## Recommendation
+Safe for converting **your own** documents (the HTML report's use case — preprocessing your .docx/.pdf for Copilot). Sandbox it if processing files from strangers; leave plugins disabled.
+</script>
+<script type="text/markdown" id="report-caveman">
+# Security Assessment — juliusbrussee/caveman
+**Verdict: 🟠 MODERATE RISK (clean today, but high-trust install model from a single maintainer)**
+Audited 2026-06-12 · Last upstream commit: 2026-05-20 · 145 files · JS hooks + Markdown skills + Python scripts
+
+> ⚠️ **Directly relevant to you:** a caveman-derived plugin ("huhhb") is already installed in your Claude Code environment — the skills visible in this session (caveman, caveman-compress, cavecrew, …) come from this codebase or a fork of it.
+
+## What it is
+A Claude Code / Copilot / Codex / Gemini plugin that forces terse "caveman" output to cut tokens. It is not just prompts: it installs **hooks** (JS that runs on every prompt/tool event), a **statusline script**, slash commands, optional **MCP middleware** (caveman-shrink), and Python compression scripts.
+
+## Findings — executable code (all call sites traced)
+
+### 🟢 F1 — Hook/MCP/script exec calls are benign in substance
+- `src/hooks/caveman-mode-tracker.js` — `execFileSync(process.execPath, …)` only re-invokes **its own** `caveman-stats.js` with a 5s timeout. Writes a mode flag to `~/.claude/.caveman-active`.
+- `src/mcp-servers/caveman-shrink/index.js` — `spawn(args[0], …)` launches **the upstream MCP command you put in your own config**, then compresses `description` fields in transit. No network of its own. (Note: as MCP middleware it sees *all* traffic of the wrapped server.)
+- `skills/caveman-compress/scripts/compress.py` — `subprocess.run(["claude", "--print"])` or the Anthropic SDK; sends your CLAUDE.md content to the LLM you already use. No third-party endpoints.
+- **No telemetry anywhere.** No analytics, no phone-home. Verified by endpoint grep.
+
+### 🟠 F2 — Install model: curl|bash / `irm|iex` from **unpinned `main`**
+`install.sh` / `install.ps1` / `caveman-init.js` are documented to be piped from `raw.githubusercontent.com/JuliusBrussee/caveman/main/...`. The installer (`bin/install.js`, ~1,100 lines) also downloads further files from the same `RAW_BASE` at run time and falls back to spawning `curl`. There is **no version pinning and no integrity check**: whatever is on `main` at the moment you run it executes on your machine. A compromised maintainer account = compromised installs, instantly. The installer also edits your `~/.claude/settings.json` to register hooks.
+
+### 🟠 F3 — Hooks are an always-on execution and behavior layer
+Once installed, the mode-tracker hook runs on **every user prompt** and the statusline script on every render. They're benign today (F1), but any future update you pull changes code that executes continuously inside your dev environment. Same applies to the SKILL.md files — they are standing instructions to your agent and can be changed upstream.
+
+### 🟡 F4 — Behavioral/quality risk of the skill itself
+Terse-mode instructions ("strip explanations, narration") trade away the model's explanatory output. On security-sensitive work, suppressed caveats and skipped explanation can hide problems. The compress skill **rewrites your CLAUDE.md/notes**; it keeps `.original.md` backups (verified in repo tests), but an LLM rewrite of your standing instructions can subtly alter meaning — diff after every compression.
+
+### 🟡 F5 — Single-maintainer project
+One primary author (JuliusBrussee), ~3 weeks since last commit. No organization, no co-maintainer review on what lands in `main` — which is exactly what the F2 install model executes.
+
+## What you expose yourself to
+1. Future-update supply chain: unpinned main-branch code with hook-level (always-running) placement.
+2. MCP middleware position (if you use caveman-shrink): it intercepts the full message stream of wrapped servers.
+3. Meaning drift in compressed memory files; degraded explanatory output.
+
+## Recommendation
+Usable, but: **install from a cloned, reviewed, pinned commit — never the curl|bash one-liner**; re-review hook JS and SKILL.md after every update; diff CLAUDE.md after each compress; skip caveman-shrink unless you need it. Since a fork of this is already live in your environment, the same review/pinning discipline applies to it.
+</script>
+<script type="text/markdown" id="report-mem0">
+# Security Assessment — mem0ai/mem0
+**Verdict: 🟡 LOW-MODERATE RISK (telemetry on by default; otherwise solid)**
+Audited 2026-06-12 · Last upstream commit: 2026-06-11 (very active) · 1,663 files · Python + TS
+
+## What it is
+Memory layer for AI agents: extracts facts from conversations into a vector store and retrieves them instead of replaying history. Two modes: **OSS/local** (your own vector DB + LLM keys) and **hosted platform** (`MemoryClient` → mem0 cloud).
+
+## Findings
+
+### 🟠 F1 — PostHog telemetry enabled by default (OSS mode)
+`mem0/memory/telemetry.py`: every Memory instance reports usage events to `https://us.i.posthog.com` with a hardcoded project key.
+- **On by default**; disable with `MEM0_TELEMETRY=false`.
+- Identity is a random UUID stored locally (`mem0/memory/setup.py`) — no PII, and captured properties are event metadata plus a host fingerprint (OS, OS version, processor, machine type, Python version — `telemetry.py:100-110`), **not memory content** (verified in `capture` call sites; the `api_key` handled near `main.py:385` configures a local vector-store client and is not transmitted).
+- Sampled via `MEM0_TELEMETRY_SAMPLE_RATE`; hosted-client events are never sampled.
+Not malicious, but default-on phone-home from a *memory* library is a legitimate enterprise-policy concern.
+
+### 🟡 F2 — Hosted mode sends your memories to mem0's cloud
+Using `MemoryClient` (platform mode) stores extracted conversation facts on mem0's infrastructure — by design, with an API key. Choose OSS mode for sensitive data.
+
+### 🟡 F3 — Memory content itself is sensitive data at rest
+In OSS mode, extracted facts land in your configured vector store unencrypted by default. The library's value (persistent recall of what you said) is also its risk: it concentrates conversation-derived data. Protect the store like you'd protect chat logs.
+
+### 🟢 Clean areas
+- No install hooks (`prepare` in mem0-ts is dev-only).
+- No pickle/eval in the memory path.
+- Network calls beyond telemetry go only to providers **you** configure (LLM, embedder, vector DB).
+- Very active (commits daily), VC-backed company, large community — strong review pressure.
+
+## What you expose yourself to
+- Default telemetry until you set `MEM0_TELEMETRY=false`.
+- A growing local (or cloud) database of distilled facts about your conversations.
+
+## Recommendation
+Fine to adopt in OSS mode with `MEM0_TELEMETRY=false` set before first import, a locally-controlled vector store, and normal at-rest protection. Use platform mode only if you accept mem0's cloud holding your memory data.
+</script>
+<script type="text/markdown" id="report-memori">
+# Security Assessment — GibsonAI/memori
+**Verdict: 🟠 MODERATE RISK (privacy) — it is a cloud service client, not a local memory layer**
+Audited 2026-06-12 · Last upstream commit: 2026-06-10 (active) · 670 files · Python + TS
+
+## What it is
+The HTML report describes Memori as a "persistent memory layer that loads a compact slice per query." Mechanically, this repo is the **client SDK for Memori Cloud (memorilabs.ai)**: it requires a `MEMORI_API_KEY`, and memory processing/augmentation happens on their servers.
+
+## Findings
+
+### 🟠 F1 — Full conversation turns are sent to api/collector.memorilabs.ai
+`memori/agent.py:capture_turn()` (lines 116-149) builds payloads containing the **complete user and assistant message text** plus session/project metadata and POSTs them to the vendor API: `agent/conversation/turn` to `api.memorilabs.ai` (required to succeed), then `agent/augmentation` to `collector.memorilabs.ai` (best-effort). The endpoints are constructed in `memori/_network.py:54` (`https://{api|collector}.memorilabs.ai`, overridable via `MEMORI_API_URL_BASE`); the SDK ships **hardcoded anonymous-tier API keys** baked into the source (`_network.py:49,53`) so it phones the vendor even with no account. (A legacy `memori/memory/_collector.py` class with a fire-and-forget-plus-stack-trace retry exists but has no callers in the current SDK; the live path is the `Api` class above.)
+This is the product working as designed — but it means **everything your agent says and hears is stored and processed on a third-party cloud**. The HTML's framing ("loads a compact slice per query") is true but omits that the slices live on someone else's servers. The "BYODB" mode moves *storage* to your database; augmentation/processing still round-trips through Memori's API — the augmentation payload includes conversation messages, the running summary, **and your system prompt** (`memori/memory/augmentation/augmentations/memori/_augmentation.py:148-159` → `sdk/augmentation`).
+
+### 🟡 F2 — Quota/identification
+Unauthenticated use is rate-limited **by IP** (README), i.e., the service observes and keys usage to your IP before you even register; full use requires an account/API key.
+
+### 🟢 Clean areas
+- No covert telemetry beyond the documented cloud architecture — the data flow *is* the product, and it's disclosed in their docs.
+- No install hooks, no pickle/eval, no suspicious exec.
+- Other network calls are to embedding backends/DB provisioning you explicitly configure (`_tei.py` for a TEI server you point it at; `tidb_zero.py` provisions a TiDB instance via API).
+- Active maintenance by GibsonAI (funded company); responsive repo.
+
+## What you expose yourself to
+- **Data residency:** conversation content, summaries, and derived memories held by Memori Labs, governed by their ToS/retention — not by you.
+- Vendor lock and availability: your agent's memory works only while their API does.
+- An API key that, if leaked, exposes your stored memories.
+
+## Recommendation
+Only adopt if you're comfortable with a cloud vendor holding full conversation history. **Do not use for client code, secrets-adjacent work, or anything under confidentiality obligations.** If you want local-first memory, mem0-OSS fits that requirement; memori does not.
+</script>
+<script type="text/markdown" id="report-codebase-memory-mcp">
+# Security Assessment — DeusData/codebase-memory-mcp
+**Verdict: 🟠 MODERATE RISK (opaque-binary install paths from a small maintainer; source itself audits clean)**
+Audited 2026-06-12 · Reviewed by senior analyst 2026-06-12 (language ID, install-path and attack-surface corrections) · Last upstream commit: 2026-06-12 (active, same-day) · 1,661 files, 1.2 GB clone · **C core (115 source files) + vendored C libraries; Go appears only as a 1-file installer wrapper**
+
+## What it is
+An MCP server that builds a code knowledge graph ("what calls X / where is Y") so the agent queries instead of re-reading files. The server is a **single static binary compiled from C** (custom store, Cypher-style query engine, tree-sitter parsing, zstd compression — all in `src/` and `internal/cbm/vendored/`). Distributed as prebuilt binaries via npm, PyPI, Homebrew, Scoop, winget, AUR, a curl|bash script — and a Go wrapper that *looks like* a source install but is not (F2).
+
+> **Correction from first-pass audit:** the original assessment identified this as a Go project. It is not — `src/` is 115 C files and the only `.go` file in the repo is `pkg/go/cmd/codebase-memory-mcp/main.go`, an installer stub. This changes both the recommended build-from-source path and the attack-surface analysis below.
+
+## Findings
+
+### 🟠 F1 — Every packaged install path downloads a prebuilt binary; checksum failure can be silent
+- **npm:** `pkg/npm/package.json` runs `node install.js` on `postinstall`, downloading a platform binary from GitHub Releases. The script is competently written (HTTPS-only, redirect cap, tar-slip path check, `execFileSync` with array args), **but** SHA-256 verification is *non-fatal*: if `checksums.txt` is missing or unfetchable, the binary installs **unverified** (`install.js:75,89` — explicitly "non-fatal").
+- **curl|bash:** the root `install.sh` (documented one-liner from `raw.githubusercontent.com/.../main/install.sh`) pulls from `releases/latest` — unpinned — with the **same skip-on-unavailable checksum pattern** (`install.sh:128-146`: verification only runs `if curl ... checksums.txt` succeeds).
+- In all cases the checksums come from the same release as the binary, so they authenticate transport, not the publisher. No reproducible-build attestations.
+
+Net effect: installing executes an opaque compiled binary published by a small unknown entity ("DeusData"). You audit the source it *claims* to be built from, not what runs.
+
+### 🟠 F2 — The `go install` path is **not** a source build (corrected finding)
+`go install github.com/DeusData/codebase-memory-mcp/pkg/go/cmd/...@latest` compiles only a ~340-line wrapper that, on first run, **downloads the same prebuilt binary** from GitHub Releases and `exec`s it (`main.go:46-55,112-174`). Same non-fatal checksum handling (`main.go:137-144`: if `checksums.txt` is unreachable *or the archive isn't listed in it*, execution proceeds unverified). It is also hardcoded to `version = "0.6.0"` while npm ships 0.8.0 — so this path silently runs an **older** release. Do not mistake it for the audited-source option.
+
+### 🟢 F3 — C server source contains no outbound networking or telemetry (verified, scope corrected)
+Grep across the C source for sockets/HTTP/telemetry: the **only** network code is `src/ui/httpd.c` — a minimal HTTP server for the optional `--ui` graph-visualization variant, hardcoded to bind `127.0.0.1` (`httpd.c:141`, "single-threaded, localhost-only"). No outbound connections, no analytics, no phone-home anywhere in server source. As written, the standard server is a local stdio MCP process.
+
+### 🟡 F4 — Memory-unsafe parser stack over untrusted input (new finding)
+The server is custom C that parses whatever you index: tree-sitter grammars (mature, widely fuzzed) plus **bespoke C** for the graph store, Cypher-style queries, YAML config, simhash, etc. If you index untrusted third-party repositories, a malicious source file exploiting a parser bug is a code-execution path that wouldn't exist in a memory-safe implementation. Mitigating signals: `.clang-tidy`/`.cppcheck` configs, fuzzing referenced in SECURITY.md/CONTRIBUTING.md, active maintenance. Risk is low for indexing your own code, real for indexing arbitrary repos.
+
+### 🟡 F5 — Indexed data includes environment/config values (new, minor)
+`src/pipeline/pass_envscan.c` deliberately scans `.env`, Dockerfile, YAML, TOML, Terraform and `.properties` files for env-var assignments whose value is a URL, storing them in the local graph DB. It filters obvious secret files/keys, but URLs themselves can embed credentials (`https://user:pass@host`) and internal endpoints. The local store therefore holds somewhat more than "code structure" — protect it accordingly.
+
+### 🟡 F6 — Repo anomaly: 1.2 GB working tree
+`internal/cbm/vendored/grammars/` vendors dozens of tree-sitter grammars as giant generated `parser.c` files (lean, systemverilog 50 MB+ each). Explains the size — bloat, not malice — but vendored generated C is effectively unauditable by eye and compiles into the binary you run.
+
+### 🟡 F7 — Trust profile
+Active (commits today) but a single small organization, low external review, and full read access to every codebase you index. Indexed data stays in a local store (see F5 for what it contains). Engineering hygiene is above average for the niche (SECURITY.md, gitleaks config, static-analysis configs, many install channels maintained in-repo).
+
+## What you expose yourself to
+1. Running an unauditable native binary with read access to your source trees, auto-fetched at install time — via *every* convenience install path, including `go install`.
+2. Publisher-account compromise = malicious release; the checksum design wouldn't catch it.
+3. Parser-level code execution if you index hostile third-party code (C memory-safety surface).
+4. Local graph DB of your codebase — including env-var URLs from config files — on disk.
+
+## Recommendation
+If the capability is worth it, **build from source with the C toolchain** — the README's "Build from Source" section (gcc/clang + `Makefile.cbm`) is the only true source path; `go install` is **not** it (F2). Pin an exact release version (avoid `releases/latest` and the npm postinstall), run it scoped to specific project directories, and don't index untrusted third-party repos. Avoid on machines holding code you're contractually required to protect until the project earns more track record.
+</script>
+<!-- /audit-reports -->
+
+<script>
+(function(){
+  var overlay=document.getElementById('auditOverlay');
+  var modal=document.getElementById('auditModal');
+  var body=document.getElementById('auditBody');
+
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function inline(s){
+    var codes=[];
+    s=esc(s).replace(/`([^`]+)`/g,function(m,c){codes.push('<code>'+c+'</code>');return '\u0001'+(codes.length-1)+'\u0001';});
+    s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+       .replace(/~~(.+?)~~/g,'<del>$1</del>')
+       .replace(/(^|[\s(])\*([^*]+)\*(?=[\s).,;:]|$)/g,'$1<em>$2</em>')
+       .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    return s.replace(/\u0001(\d+)\u0001/g,function(m,i){return codes[+i];});
+  }
+  function tableHtml(rows){
+    var cells=function(r){return r.replace(/^\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){return c.trim();});};
+    var html='<table><thead><tr>'+cells(rows[0]).map(function(c){return '<th>'+inline(c)+'</th>';}).join('')+'</tr></thead><tbody>';
+    for(var r=2;r<rows.length;r++){
+      html+='<tr>'+cells(rows[r]).map(function(c){return '<td>'+inline(c)+'</td>';}).join('')+'</tr>';
+    }
+    return html+'</tbody></table>';
+  }
+  function render(md){
+    var out=[],lines=md.split(/\r?\n/),i=0;
+    while(i<lines.length){
+      var l=lines[i];
+      if(/^```/.test(l)){
+        var code=[];i++;
+        while(i<lines.length&&!/^```/.test(lines[i])){code.push(lines[i]);i++;}
+        i++;out.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');continue;
+      }
+      if(/^###\s/.test(l)){out.push('<h3>'+inline(l.slice(4))+'</h3>');i++;continue;}
+      if(/^##\s/.test(l)){out.push('<h2>'+inline(l.slice(3))+'</h2>');i++;continue;}
+      if(/^#\s/.test(l)){out.push('<h1>'+inline(l.slice(2))+'</h1>');i++;continue;}
+      if(/^\s*[-*]\s/.test(l)){
+        var items=[];
+        while(i<lines.length&&/^\s*[-*]\s/.test(lines[i])){items.push('<li>'+inline(lines[i].replace(/^\s*[-*]\s/,''))+'</li>');i++;}
+        out.push('<ul>'+items.join('')+'</ul>');continue;
+      }
+      if(/^\|/.test(l)){
+        var rows=[];
+        while(i<lines.length&&/^\|/.test(lines[i])){rows.push(lines[i]);i++;}
+        out.push(tableHtml(rows));continue;
+      }
+      if(!l.trim()){i++;continue;}
+      var para=[l];i++;
+      while(i<lines.length&&lines[i].trim()&&!/^(#|```|\||\s*[-*]\s)/.test(lines[i])){para.push(lines[i]);i++;}
+      out.push('<p>'+para.map(inline).join('<br>')+'</p>');
+    }
+    return out.join('\n');
+  }
+
+  document.querySelectorAll('#audit tbody tr[data-report]').forEach(function(tr){
+    tr.addEventListener('click',function(){
+      var src=document.getElementById('report-'+tr.getAttribute('data-report'));
+      if(!src)return;
+      body.innerHTML=render(src.textContent.trim());
+      overlay.classList.add('open');
+      modal.scrollTop=0;
+      document.body.style.overflow='hidden';
+    });
+  });
+  function closeOverlay(){overlay.classList.remove('open');document.body.style.overflow='';}
+  overlay.addEventListener('click',function(e){if(e.target===overlay)closeOverlay();});
+  document.getElementById('auditClose').addEventListener('click',closeOverlay);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeOverlay();});
+})();
+</script>
+</body>
+</html>
